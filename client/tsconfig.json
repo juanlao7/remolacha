@@ -1,0 +1,18 @@
+{
+    "include": ["src/**/*"],
+    "compilerOptions": {
+        "outDir": "./dist/",
+        "target": "ES5",
+        "module": "ES6",
+        "lib": ["ES6", "DOM"],
+        "strict": true,
+        "strictNullChecks": false,
+        "esModuleInterop": true,
+        "skipLibCheck": true,
+        "forceConsistentCasingInFileNames": true,
+        "jsx": "react",
+        "sourceMap": true
+    },
+    "$schema": "https://json.schemastore.org/tsconfig",
+    "display": "Recommended"
+}

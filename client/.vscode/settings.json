@@ -1,0 +1,11 @@
+{
+    "emeraldwalk.runonsave": {
+        "commands": [
+            {
+                "match": ".*",
+                "isAsync": true,
+                "cmd": "npm run build --prefix \"${workspaceRoot}\""
+            }
+        ]
+    }
+}
