@@ -7,6 +7,8 @@
         "lib": ["ES6", "DOM"],
         "strict": true,
         "strictNullChecks": false,
+        "resolveJsonModule": true,
+        "moduleResolution": "node",
         "esModuleInterop": true,
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,

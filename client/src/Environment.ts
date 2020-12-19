@@ -4,9 +4,12 @@ import { AppInitializer } from './AppInitializer';
 import { AppNotFoundError } from './AppNotFoundError';
 import { MaxAppInstancesReachedError } from './MaxAppInstancesReachedError';
 import { UndefinedAppInitializerError } from './UndefinedAppInitializerError';
+import manifestsJSON from '../apps/manifests.json';
 
 export class Environment {
     static readonly MAX_APP_INSTANCES = Number.MAX_SAFE_INTEGER;
+
+    private static instance : Environment = null;
 
     private installedAppManifests : Map<string, AppManifest>;
     private appInstances : Map<number, AppInstance>;
@@ -16,27 +19,29 @@ export class Environment {
     private loadedCSS : Map<string, [HTMLElement, Set<AppInstance>]>;
     private loadedJS : Set<string>;
 
-    constructor() {
-        this.installedAppManifests = new Map<string, AppManifest>();
+    private constructor() {
+        this.installedAppManifests = new Map<string, AppManifest>(manifestsJSON.map(x => [x.id, x]));
         this.appInstances = new Map<number, AppInstance>();
         this.appInstancesByAppId = new Map<string, Set<AppInstance>>();
         this.lastInstanceId = 0;
         this.appInitializers = new Map<string, AppInitializer>();
         this.loadedCSS = new Map<string, [HTMLElement, Set<AppInstance>]>();
         this.loadedJS = new Set<string>();
-
-        this.loadInstalledAppManifests();
     }
 
-    private loadInstalledAppManifests() {
-        // TODO
+    static getInstance() : Environment {
+        if (Environment.instance == null) {
+            Environment.instance = new Environment();
+        }
+
+        return Environment.instance;
     }
 
     getInstalledApps() : Array<AppManifest> {
         return Array.from(this.installedAppManifests.values());
     }
 
-    async openApp(appId : string, params : Map<string, any>) : Promise<AppInstance> {
+    async openApp(appId : string, params : Map<string, any> = null) : Promise<AppInstance> {
         if (!this.installedAppManifests.has(appId)) {
             throw new AppNotFoundError(appId);
         }
@@ -64,7 +69,7 @@ export class Environment {
             throw new MaxAppInstancesReachedError();
         }
         
-        const appInstance : AppInstance = new AppInstance(appInstanceId, appManifest, this);
+        const appInstance : AppInstance = new AppInstance(appInstanceId, appManifest);
         this.appInstances.set(appInstanceId, appInstance);
 
         if (!this.appInstancesByAppId.has(appManifest.id)) {
@@ -75,7 +80,7 @@ export class Environment {
         // TODO: listen to exit event, to remove all references and unload CSS
         
         if (!this.appInitializers.has(appManifest.id)) {
-            // TODO: run app's boot.js with await
+            await this.loadJS(`apps/${appId}/boot.js`, true);
         }
 
         if (!this.appInitializers.has(appManifest.id)) {
@@ -111,7 +116,7 @@ export class Environment {
         // Approach to detect "load" event inspired on https://www.phpied.com/when-is-a-stylesheet-really-loaded/
         styleElement.textContent = `@import "${url}"`;
 
-        await new Promise((resolve) => {
+        await new Promise(resolve => {
             const interval = setInterval(() => {
                 try {
                     styleElement.sheet.cssRules;

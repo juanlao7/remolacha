@@ -5,13 +5,11 @@ import { Window } from './Window';
 export class AppInstance {
     private id : number;
     private appManifest : AppManifest;
-    private environment : Environment;
     private windows : Set<Window>;
 
-    constructor(id : number, appManifest : AppManifest, environment : Environment) {
+    constructor(id : number, appManifest : AppManifest) {
         this.id = id;
         this.appManifest = appManifest;
-        this.environment = environment;
         this.windows = new Set<Window>();
     }
 
@@ -21,10 +19,6 @@ export class AppInstance {
 
     getAppManifest() : AppManifest {
         return this.appManifest;
-    }
-
-    getEnvironment() : Environment {
-        return this.environment;
     }
 
     addWindow(window : Window) {
@@ -42,19 +36,19 @@ export class AppInstance {
     }
 
     async callBackend(service : string, data : Blob) : Promise<object> {
-        return await this.environment.callBackend(this.appManifest.id, service, data);
+        return await Environment.getInstance().callBackend(this.appManifest.id, service, data);
     }
 
     async loadCSS(url : string) : Promise<void> {
-        await this.environment.loadCSS(this, url);
+        await Environment.getInstance().loadCSS(this, url);
     }
 
     unloadCSS(url : string) {
-        this.environment.unloadCSS(this, url);
+        Environment.getInstance().unloadCSS(this, url);
     }
 
     async loadJS(url : string, skipIfAlreadyLoaded : boolean) : Promise<void> {
-        await this.environment.loadJS(url, skipIfAlreadyLoaded);
+        await Environment.getInstance().loadJS(url, skipIfAlreadyLoaded);
     }
 
     exit() {

@@ -1,0 +1,17 @@
+[
+	{
+		"id": "remolacha.System",
+		"name": "System",
+		"isSingleton": true
+	},
+	{
+		"id": "remolacha.Desktop",
+		"name": "Desktop",
+		"isSingleton": true
+	},
+	{
+		"id": "remolacha.Taskbar",
+		"name": "Taskbar",
+		"isSingleton": true
+	}
+]

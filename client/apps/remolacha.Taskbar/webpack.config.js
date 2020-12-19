@@ -1,12 +1,9 @@
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const HtmlWebpackPlugin = require('html-webpack-plugin');
-//const CopyWebpackPlugin = require('copy-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
-const GoogleFontsPlugin = require('google-fonts-plugin');
 
 module.exports = {
-    entry: './src/boot.ts',
+    entry: path.resolve(__dirname, 'src', 'boot.ts'),
     devtool: 'inline-source-map',
     module: {
         rules: [
@@ -37,37 +34,15 @@ module.exports = {
         extensions: ['.tsx', '.ts', '.js']
     },
     plugins: [
-        new CleanWebpackPlugin(['dist']),
-        new HtmlWebpackPlugin({
-            template: 'index.ejs'
-        }),
+        new CleanWebpackPlugin([path.resolve(__dirname, 'dist')]),
         new MiniCssExtractPlugin({
             filename: 'bundle.css',
             chunkFilename: 'bundle.css'
-        }),
-        /*new CopyWebpackPlugin([
-            {
-                from: 'favicons',
-                to: ''
-            },
-        ]),*/
-        new GoogleFontsPlugin({
-            fonts: [
-                {
-                    family: 'Roboto',
-                    variants: ['400', '500']
-                },
-                {
-                    family: 'Roboto Mono',
-                    variants: ['400']
-                }
-            ],
-            formats: ['woff2']
         })
     ],
     output: {
         filename: 'boot.js',
-        path: path.resolve(__dirname, 'dist')
+        path: path.resolve(__dirname, '..', '..', 'dist', 'apps', path.basename(__dirname))
     },
     node: {
         fs: 'empty'
