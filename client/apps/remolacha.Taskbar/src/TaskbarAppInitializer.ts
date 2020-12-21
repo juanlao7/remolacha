@@ -4,6 +4,6 @@ export class TaskbarAppInitializer {
             return;
         }
 
-        console.log('Taskbar!');
+        console.log(window.React);
     }
 }

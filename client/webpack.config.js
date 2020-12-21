@@ -1,7 +1,7 @@
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-//const CopyWebpackPlugin = require('copy-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const GoogleFontsPlugin = require('google-fonts-plugin');
 
@@ -51,18 +51,29 @@ module.exports = {
                 to: ''
             },
         ]),*/
+        new CopyWebpackPlugin([
+            {
+                from: 'node_modules/material-icons/iconfont',
+                to: 'libs/material-icons'
+            },
+            {
+                from: 'libs',
+                to: 'libs'
+            }
+        ]),
         new GoogleFontsPlugin({
             fonts: [
                 {
                     family: 'Roboto',
-                    variants: ['400', '500']
+                    variants: ['300', '400', '500', '700']
                 },
                 {
                     family: 'Roboto Mono',
-                    variants: ['400']
+                    variants: ['300', '400', '500', '700']
                 }
             ],
-            formats: ['woff2']
+            formats: ['woff2'],
+            filename: 'libs/fonts.css'
         })
     ],
     output: {
