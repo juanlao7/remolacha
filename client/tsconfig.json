@@ -1,9 +1,8 @@
 {
-    "include": ["src/**/*"],
     "compilerOptions": {
         "outDir": "./dist/",
         "target": "ES5",
-        "module": "ES6",
+        "module": "commonjs",
         "lib": ["ES6", "DOM"],
         "strict": true,
         "strictNullChecks": false,
@@ -13,7 +12,9 @@
         "skipLibCheck": true,
         "forceConsistentCasingInFileNames": true,
         "jsx": "react",
-        "sourceMap": true
+        "sourceMap": true,
+        "declaration": true,
+        "declarationDir": "types"
     },
     "$schema": "https://json.schemastore.org/tsconfig",
     "display": "Recommended"

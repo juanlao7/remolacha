@@ -1,4 +1,4 @@
-declare var remolacha : any;
+declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
 export class SystemAppInitializer {
     open(appInstance : any, initialize : boolean, params : Map<string, any>) {

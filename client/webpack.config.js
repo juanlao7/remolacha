@@ -6,7 +6,7 @@ const CleanWebpackPlugin = require('clean-webpack-plugin');
 const GoogleFontsPlugin = require('google-fonts-plugin');
 
 module.exports = {
-    entry: './src/boot.ts',
+    entry: './remolacha/index.ts',
     devtool: 'inline-source-map',
     module: {
         rules: [
@@ -77,8 +77,9 @@ module.exports = {
         })
     ],
     output: {
-        filename: 'boot.js',
-        path: path.resolve(__dirname, 'dist')
+        filename: 'remolacha.js',
+        path: path.resolve(__dirname, 'dist'),
+        library: 'remolacha'
     },
     node: {
         fs: 'empty'

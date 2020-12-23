@@ -27,7 +27,7 @@ export class AppInstance {
         }
 
         this.windows.add(window);
-        // TODO: append the HTML element.
+        Environment.getInstance().addWindow(window);
         // TODO: listen to close event, and delete them from the set.
     }
 
@@ -47,7 +47,7 @@ export class AppInstance {
         Environment.getInstance().unloadCSS(this, url);
     }
 
-    async loadJS(url : string, skipIfAlreadyLoaded : boolean) : Promise<void> {
+    async loadJS(url : string, skipIfAlreadyLoaded : boolean = true) : Promise<void> {
         await Environment.getInstance().loadJS(url, skipIfAlreadyLoaded);
     }
 

@@ -1,10 +1,43 @@
 import { AppManifest } from './AppManifest';
 import { AppInstance } from './AppInstance';
 import { AppInitializer } from './AppInitializer';
+import { Window } from './Window';
 import { AppNotFoundError } from './AppNotFoundError';
 import { MaxAppInstancesReachedError } from './MaxAppInstancesReachedError';
 import { UndefinedAppInitializerError } from './UndefinedAppInitializerError';
 import manifestsJSON from '../apps/manifests.json';
+const React = window.React;
+const ReactDOM = window.ReactDOM;
+
+interface EnvironmentComponentProps {
+}
+
+interface EnvironmentComponentState {
+    windows? : Array<Window>;
+}
+
+class EnvironmentComponent extends React.Component<EnvironmentComponentProps, EnvironmentComponentState> {
+    constructor(props : EnvironmentComponentProps) {
+        super(props);
+        
+        this.state = {
+            windows: new Array<Window>()
+        }
+    }
+
+    addWindow(window : Window) {
+        if (this.state.windows.indexOf(window) >= 0) {
+            return;
+        }
+
+        this.state.windows.push(window);
+        this.setState({windows: this.state.windows});
+    }
+
+    render() {
+        return (<div>{this.state.windows.map(x => x.getJSXElement())}</div>);
+    }
+}
 
 export class Environment {
     static readonly MAX_APP_INSTANCES = Number.MAX_SAFE_INTEGER;
@@ -18,6 +51,7 @@ export class Environment {
     private appInitializers : Map<string, AppInitializer>;
     private loadedCSS : Map<string, [HTMLElement, Set<AppInstance>]>;
     private loadedJS : Set<string>;
+    private environmentComponent : EnvironmentComponent;
 
     private constructor() {
         this.installedAppManifests = new Map<string, AppManifest>(manifestsJSON.map(x => [x.id, x]));
@@ -27,6 +61,8 @@ export class Environment {
         this.appInitializers = new Map<string, AppInitializer>();
         this.loadedCSS = new Map<string, [HTMLElement, Set<AppInstance>]>();
         this.loadedJS = new Set<string>();
+
+        ReactDOM.render(<EnvironmentComponent ref={x => this.environmentComponent = x} />, document.body);
     }
 
     static getInstance() : Environment {
@@ -37,11 +73,15 @@ export class Environment {
         return Environment.instance;
     }
 
+    addWindow(window : Window) {
+        this.environmentComponent.addWindow(window);
+    }
+
     getInstalledApps() : Array<AppManifest> {
         return Array.from(this.installedAppManifests.values());
     }
 
-    async openApp(appId : string, params : Map<string, any> = null) : Promise<AppInstance> {
+    async openApp(appId : string, params : Map<string, any> = new Map<string, any>()) : Promise<AppInstance> {
         if (!this.installedAppManifests.has(appId)) {
             throw new AppNotFoundError(appId);
         }
@@ -80,7 +120,7 @@ export class Environment {
         // TODO: listen to exit event, to remove all references and unload CSS
         
         if (!this.appInitializers.has(appManifest.id)) {
-            await this.loadJS(`apps/${appId}/boot.js`, true);
+            await this.loadJS(`apps/${appId}/boot.js`);
         }
 
         if (!this.appInitializers.has(appManifest.id)) {
@@ -146,7 +186,7 @@ export class Environment {
         }
     }
 
-    async loadJS(url : string, skipIfAlreadyLoaded : boolean) : Promise<void> {
+    async loadJS(url : string, skipIfAlreadyLoaded : boolean = true) : Promise<void> {
         if (skipIfAlreadyLoaded && this.loadedJS.has(url)) {
             return;
         }
