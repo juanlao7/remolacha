@@ -25,8 +25,7 @@ module.exports = {
             },
             {
                 test: /\.tsx?$/,
-                use: 'ts-loader',
-                exclude: /node_modules/
+                use: ['ts-loader']
             }
         ]
     },
@@ -40,6 +39,11 @@ module.exports = {
             chunkFilename: 'bundle.css'
         })
     ],
+    externals: {
+        react: 'React',
+        'react-dom': 'ReactDOM',
+        '@material-ui/core': 'MaterialUI'
+    },
     output: {
         filename: 'boot.js',
         path: path.resolve(__dirname, '..', '..', 'dist', 'apps', path.basename(__dirname))

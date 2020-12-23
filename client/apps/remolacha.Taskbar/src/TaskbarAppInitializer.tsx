@@ -1,3 +1,6 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+import { Button } from '@material-ui/core';
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
 export class TaskbarAppInitializer {
@@ -6,11 +9,11 @@ export class TaskbarAppInitializer {
             return;
         }
 
-        const element = document.createElement('div');
-        element.textContent = 'This is a taskbar';
+        const content = document.createElement('div');
+        ReactDOM.render(<Button>This will be the taskbar</Button>, content);
 
         const window = new remolacha.Window();
-        window.setContent(element);
+        window.setContent(content);
         appInstance.addWindow(window);
     }
 }

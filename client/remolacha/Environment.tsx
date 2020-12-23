@@ -1,3 +1,5 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
 import { AppManifest } from './AppManifest';
 import { AppInstance } from './AppInstance';
 import { AppInitializer } from './AppInitializer';
@@ -6,8 +8,6 @@ import { AppNotFoundError } from './AppNotFoundError';
 import { MaxAppInstancesReachedError } from './MaxAppInstancesReachedError';
 import { UndefinedAppInitializerError } from './UndefinedAppInitializerError';
 import manifestsJSON from '../apps/manifests.json';
-const React = window.React;
-const ReactDOM = window.ReactDOM;
 
 interface EnvironmentComponentProps {
 }

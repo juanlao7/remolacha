@@ -28,8 +28,7 @@ module.exports = {
             },
             {
                 test: /\.tsx?$/,
-                use: 'ts-loader',
-                exclude: /node_modules/
+                use: ['ts-loader']
             }
         ]
     },
@@ -76,6 +75,11 @@ module.exports = {
             filename: 'libs/fonts.css'
         })
     ],
+    externals: {
+        react: 'React',
+        'react-dom': 'ReactDOM',
+        '@material-ui/core': 'MaterialUI'
+    },
     output: {
         filename: 'remolacha.js',
         path: path.resolve(__dirname, 'dist'),
@@ -83,5 +87,5 @@ module.exports = {
     },
     node: {
         fs: 'empty'
-    }      
+    }
 };
