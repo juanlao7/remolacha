@@ -3,7 +3,7 @@ import { AppBar, Toolbar, Box, Typography, Button, Icon } from '@material-ui/cor
 import EventManager from './EventManager';
 import MaxInstancesReachedError from './MaxInstancesReachedError';
 import IconDefinition from './IconDefinition';
-import { generateClassName } from './utils';
+import { clamp, generateClassName } from './utils';
 
 interface WindowComponentProps {
 }
@@ -13,20 +13,28 @@ interface WindowComponentState {
     content? : HTMLElement;
     showInTaskbar? : boolean;
     showFrame? : boolean;
+    sanitizeDimensions? : boolean;
     icon? : IconDefinition;
     x? : number;
     y? : number;
     width? : number;
     height? : number;
-    x2? : number;
-    y2? : number;
+    xRight? : number;
+    yBottom? : number;
+    maximized? : boolean;
     mouseAnchor? : {
-        xDiff : number,
-        yDiff : number
-    }
+        xDiff : number;
+        yDiff : number;
+    };
+    window? : Window;
 }
 
 class WindowComponent extends React.Component<WindowComponentProps, WindowComponentState> {
+    private static TASKBAR_HEIGHT = 48;
+    private static BOTTOM_MARGIN = WindowComponent.TASKBAR_HEIGHT + 32 + 1;     // 32px for appbar, 1px for border.
+    private static LEFT_MARGIN = 32 + 32 * 3 + 1;                               // 32px arbitrary, 32px for each button, 1px for border.
+    private static RIGHT_MARGIN = 32 + 1;                                       // 32px arbitrary, 1px for border.
+
     constructor(props : WindowComponentProps) {
         super(props);
 
@@ -35,13 +43,16 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
             content: null,
             showInTaskbar: true,
             showFrame: true,
+            sanitizeDimensions: true,
             x: 50,
             y: 50,
             width: 640,
             height: 480,
-            x2: null,
-            y2: null,
-            mouseAnchor: null
+            xRight: null,
+            yBottom: null,
+            maximized: false,
+            mouseAnchor: null,
+            window : null
         };
 
         document.addEventListener('mouseup', e => this.onDocumentMouseUp(e));
@@ -60,11 +71,29 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
         }
 
         event.preventDefault();
+        let x = this.state.x;
+        let y = this.state.y;
+        
+        if (this.state.maximized) {
+            const width = this.getCurrentWidth();
+            
+            if (width > event.clientX) {
+                x = 0;
+            }
+            else if (width > document.body.clientWidth - event.clientX) {
+                x = document.body.clientWidth - width;
+            }
+            else {
+                x = event.clientX - Math.floor(width / 2);
+            }
+
+            y = 0;
+        }
 
         this.setState({
             mouseAnchor: {
-                xDiff: this.state.x - event.clientX,
-                yDiff: this.state.y - event.clientY
+                xDiff: x - event.clientX,
+                yDiff: y - event.clientY
             }
         });
     }
@@ -85,7 +114,8 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
 
         this.setState({
             x: event.clientX + this.state.mouseAnchor.xDiff,
-            y: event.clientY + this.state.mouseAnchor.yDiff
+            y: event.clientY + this.state.mouseAnchor.yDiff,
+            maximized: false
         });
     }
 
@@ -94,36 +124,84 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
     }
 
     private onMaximizeButtonClick() {
-        
+        this.setState({maximized: !this.state.maximized});
     }
 
     private onCloseButtonClick() {
         
     }
 
-    render() {
-        const style : React.CSSProperties = {};
+    private getCurrentWidth() {
+        if (this.state.xRight != null) {
+            return (document.body.clientWidth - this.state.xRight) - this.state.x;
+        }
+        
+        if (this.state.width != null) {
+            return this.state.width;
+        }
+
+        return 0;
+    }
+
+    componentDidUpdate() {
+        if (!this.state.sanitizeDimensions) {
+            return;
+        }
+
+        const corrections : WindowComponentState = {};
 
         if (this.state.x != null) {
-            style.left = `${this.state.x}px`;
+            const x = clamp(this.state.x, WindowComponent.LEFT_MARGIN - this.getCurrentWidth(), document.body.clientWidth - WindowComponent.RIGHT_MARGIN);
+            
+            if (x != this.state.x) {
+                corrections.x = x;
+            }
         }
 
         if (this.state.y != null) {
-            style.top = `${this.state.y}px`;
+            const y = clamp(this.state.y, 0, document.body.clientHeight - WindowComponent.BOTTOM_MARGIN);
+
+            if (y != this.state.y) {
+                corrections.y = y;
+            }
         }
 
-        if (this.state.x2 != null) {
-            style.right = `${this.state.x2}px`;
+        if (Object.keys(corrections).length > 0) {
+            this.setState(corrections);
         }
-        else if (this.state.width != null) {
-            style.width = `${this.state.width}px`;
-        }
+    }
 
-        if (this.state.y2 != null) {
-            style.bottom = `${this.state.y2}px`;
+    render() {
+        const style : React.CSSProperties = {};
+
+        if (this.state.maximized) {
+            style.left = '0';
+            style.right = '0';
+            style.top = '0';
+            style.bottom = `${WindowComponent.TASKBAR_HEIGHT}px`;
         }
-        else if (this.state.height != null) {
-            style.height = `${this.state.height}px`;
+        else {
+            if (this.state.x != null) {
+                style.left = `${this.state.x}px`;
+            }
+            
+            if (this.state.y != null) {
+                style.top = `${this.state.y}px`;
+            }
+            
+            if (this.state.xRight != null) {
+                style.right = `${this.state.xRight}px`;
+            }
+            else if (this.state.width != null) {
+                style.width = `${this.state.width}px`;
+            }
+
+            if (this.state.yBottom != null) {
+                style.bottom = `${this.state.yBottom}px`;
+            }
+            else if (this.state.height != null) {
+                style.height = `${this.state.height}px`;
+            }
         }
 
         const windowClasses = generateClassName({
@@ -150,7 +228,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
                         </Button>
 
                         <Button color="inherit" onClick={() => this.onMaximizeButtonClick()}>
-                            <Icon fontSize="small">crop_square</Icon>
+                            <Icon fontSize="small">{(this.state.maximized) ? 'filter_none' : 'crop_square'}</Icon>
                         </Button>
 
                         <Button color="inherit" onClick={() => this.onCloseButtonClick()}>
@@ -196,6 +274,7 @@ export default class Window {
         this.windowComponent = null;
         this.pendingState = {};
         this.jsxElement = <WindowComponent ref={x => this.onRef(x)} />;
+        state.window = this;
         this.setState(state);
     }
 

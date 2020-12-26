@@ -20,10 +20,11 @@ export default class TaskbarAppInitializer {
             content: content,
             showInTaskbar: false,
             showFrame: false,
+            sanitizeDimensions: false,
             x: 0,
             y: null,
-            x2: 0,
-            y2: 0
+            xRight: 0,
+            yBottom: 0
         }));
     }
 }
