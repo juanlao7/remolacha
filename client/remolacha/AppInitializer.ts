@@ -1,5 +1,5 @@
-import { AppInstance } from './AppInstance';
+import AppInstance from './AppInstance';
 
-export interface AppInitializer {
-    open(appInstance : AppInstance, initialize : boolean, params : Map<string, any>) : void;
+export default interface AppInitializer {
+    open(appInstance : AppInstance, initialize : boolean, params : Map<string, any>) : Promise<void>;
 }

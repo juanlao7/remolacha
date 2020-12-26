@@ -1,8 +1,8 @@
-import { Environment } from './Environment';
-import { AppManifest } from './AppManifest';
-import { Window } from './Window';
+import Environment from './Environment';
+import AppManifest from './AppManifest';
+import Window from './Window';
 
-export class AppInstance {
+export default class AppInstance {
     private id : number;
     private appManifest : AppManifest;
     private windows : Set<Window>;

@@ -52,10 +52,6 @@ module.exports = {
         ]),*/
         new CopyWebpackPlugin([
             {
-                from: 'node_modules/material-icons/iconfont',
-                to: 'libs/material-icons'
-            },
-            {
                 from: 'libs',
                 to: 'libs'
             }
@@ -69,6 +65,9 @@ module.exports = {
                 {
                     family: 'Roboto Mono',
                     variants: ['300', '400', '500', '700']
+                },
+                {
+                    family: 'Material Icons'
                 }
             ],
             formats: ['woff2'],

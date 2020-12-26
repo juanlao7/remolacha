@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "outDir": "./dist/",
-        "target": "ES5",
+        "target": "ES6",
         "module": "commonjs",
         "lib": ["ES6", "DOM"],
         "strict": true,
@@ -14,7 +14,9 @@
         "jsx": "react",
         "sourceMap": true,
         "declaration": true,
-        "declarationDir": "types"
+        "declarationDir": "types",
+        "noImplicitAny": true,
+        "noImplicitThis": true
     },
     "$schema": "https://json.schemastore.org/tsconfig",
     "display": "Recommended"

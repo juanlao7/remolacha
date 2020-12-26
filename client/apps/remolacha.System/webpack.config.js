@@ -1,6 +1,5 @@
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
-const CleanWebpackPlugin = require('clean-webpack-plugin');
 
 module.exports = {
     entry: path.resolve(__dirname, 'src', 'boot.ts'),
@@ -33,7 +32,6 @@ module.exports = {
         extensions: ['.tsx', '.ts', '.js']
     },
     plugins: [
-        new CleanWebpackPlugin([path.resolve(__dirname, 'dist')]),
         new MiniCssExtractPlugin({
             filename: 'bundle.css',
             chunkFilename: 'bundle.css'

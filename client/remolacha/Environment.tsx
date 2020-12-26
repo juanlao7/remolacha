@@ -1,13 +1,23 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { AppManifest } from './AppManifest';
-import { AppInstance } from './AppInstance';
-import { AppInitializer } from './AppInitializer';
-import { Window } from './Window';
-import { AppNotFoundError } from './AppNotFoundError';
-import { MaxAppInstancesReachedError } from './MaxAppInstancesReachedError';
-import { UndefinedAppInitializerError } from './UndefinedAppInitializerError';
+import AppManifest from './AppManifest';
+import AppInstance from './AppInstance';
+import AppInitializer from './AppInitializer';
+import Window from './Window';
+import AppNotFoundError from './AppNotFoundError';
+import MaxInstancesReachedError from './MaxInstancesReachedError';
+import UndefinedAppInitializerError from './UndefinedAppInitializerError';
 import manifestsJSON from '../apps/manifests.json';
+import EventManager from './EventManager';
+import { createMuiTheme, MuiThemeProvider } from '@material-ui/core';
+
+const theme = createMuiTheme({
+    palette: {
+        primary: {
+            main: '#CB2F70'
+        }
+    }
+});
 
 interface EnvironmentComponentProps {
 }
@@ -34,13 +44,32 @@ class EnvironmentComponent extends React.Component<EnvironmentComponentProps, En
         this.setState({windows: this.state.windows});
     }
 
+    removeWindow(window : Window) {
+        const index = this.state.windows.indexOf(window);
+
+        if (index < 0) {
+            return;
+        }
+
+        this.state.windows.splice(index, 1);
+        this.setState({windows : this.state.windows});
+    }
+
     render() {
-        return (<div>{this.state.windows.map(x => x.getJSXElement())}</div>);
+        return (
+            <MuiThemeProvider theme={theme}>
+                <div className="remolacha_Environment">
+                    {this.state.windows.map(x => x.getJSXElement())}
+                </div>
+            </MuiThemeProvider>
+        );
     }
 }
 
-export class Environment {
+export default class Environment {
     static readonly MAX_APP_INSTANCES = Number.MAX_SAFE_INTEGER;
+
+    readonly events = new EventManager(this);
 
     private static instance : Environment = null;
 
@@ -75,6 +104,12 @@ export class Environment {
 
     addWindow(window : Window) {
         this.environmentComponent.addWindow(window);
+        window.events.on('close', (emitter : any) => this.removeWindow(emitter));
+        this.events.fire('windowAdd', window);
+    }
+
+    removeWindow(window : Window) {
+        this.events.fire('windowRemove', window);
     }
 
     getInstalledApps() : Array<AppManifest> {
@@ -91,7 +126,7 @@ export class Environment {
         if (appManifest.isSingleton && this.appInstancesByAppId.has(appManifest.id)) {
             // It is a singleton and an instance already exists.
             const appInstance : AppInstance = this.appInstancesByAppId.get(appManifest.id).values().next().value;
-            this.appInitializers.get(appManifest.id).open(appInstance, false, params);
+            await this.appInitializers.get(appManifest.id).open(appInstance, false, params);
             return appInstance;
         }
 
@@ -106,9 +141,10 @@ export class Environment {
         }
 
         if (appInstanceId == this.lastInstanceId) {
-            throw new MaxAppInstancesReachedError();
+            throw new MaxInstancesReachedError('app', Environment.MAX_APP_INSTANCES);
         }
         
+        this.lastInstanceId = appInstanceId;
         const appInstance : AppInstance = new AppInstance(appInstanceId, appManifest);
         this.appInstances.set(appInstanceId, appInstance);
 
@@ -127,7 +163,7 @@ export class Environment {
             throw new UndefinedAppInitializerError(appManifest.id);
         }
 
-        this.appInitializers.get(appManifest.id).open(appInstance, true, params);
+        await this.appInitializers.get(appManifest.id).open(appInstance, true, params);
         return appInstance;
     }
 

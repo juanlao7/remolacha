@@ -1,14 +1,16 @@
-import { Environment } from './Environment';
-import { Window } from './Window';
-import { AppNotFoundError } from './AppNotFoundError';
-import { MaxAppInstancesReachedError } from './MaxAppInstancesReachedError';
-import { UndefinedAppInitializerError } from './UndefinedAppInitializerError';
+import Environment from './Environment';
+import Window from './Window';
+import AppNotFoundError from './AppNotFoundError';
+import MaxInstancesReachedError from './MaxInstancesReachedError';
+import UndefinedAppInitializerError from './UndefinedAppInitializerError';
+
+require('./assets/sass/index.sass');
 
 export {
     Environment,
     Window,
     AppNotFoundError,
-    MaxAppInstancesReachedError,
+    MaxInstancesReachedError,
     UndefinedAppInitializerError
 };
 
