@@ -1,0 +1,38 @@
+@import ../css/reset.css
+@import md-material-shadows
+
+html,
+body,
+.remolacha_Environment
+    height: 100%
+    overflow: hidden
+    overscroll-behavior: none     // Prevents swiping history navigation.
+
+.remolacha_Window
+    position: absolute
+    overflow: hidden
+
+    &.remolacha_WindowShowFrame
+        border: 1px solid #CB2F70
+        background: #fff
+        +mdElevation(24)
+    
+    .remolacha_topFrame
+        .MuiToolbar-dense
+            min-height: 32px
+
+            .MuiBox-root
+                pointer-events: none
+                
+                h6
+                    padding-left: 8px
+                    user-select: none
+
+        button
+            border-radius: 0
+            height: 32px
+            min-width: 32px
+            padding: 0
+
+    &:not(.remolacha_WindowShowFrame) .remolacha_topFrame
+        display: none

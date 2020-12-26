@@ -1,19 +1,29 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import { Button } from '@material-ui/core';
+import Taskbar from './Taskbar';
+
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
-export class TaskbarAppInitializer {
-    open(appInstance : any, initialize : boolean, params : Map<string, any>) {
+export default class TaskbarAppInitializer {
+    async open(appInstance : any, initialize : boolean, params : Map<string, any>) {
         if (!initialize) {
             return;
         }
 
-        const content = document.createElement('div');
-        ReactDOM.render(<Button>This will be the taskbar</Button>, content);
+        await appInstance.loadCSS('apps/remolacha.Taskbar/bundle.css');
 
-        const window = new remolacha.Window();
-        window.setContent(content);
-        appInstance.addWindow(window);
+        const content = document.createElement('div');
+        ReactDOM.render(<Taskbar />, content);
+
+        appInstance.addWindow(new remolacha.Window({
+            title: 'Taskbar',
+            content: content,
+            showInTaskbar: false,
+            showFrame: false,
+            x: 0,
+            y: null,
+            x2: 0,
+            y2: 0
+        }));
     }
 }
