@@ -2,16 +2,32 @@
 	{
 		"id": "remolacha.System",
 		"name": "System",
-		"isSingleton": true
+		"isSingleton": true,
+		"showInAppsMenu": false,
+		"icon": null
 	},
 	{
 		"id": "remolacha.Desktop",
 		"name": "Desktop",
-		"isSingleton": true
+		"isSingleton": true,
+		"showInAppsMenu": false,
+		"icon": null
 	},
 	{
 		"id": "remolacha.Taskbar",
 		"name": "Taskbar",
-		"isSingleton": true
+		"isSingleton": true,
+		"showInAppsMenu": false,
+		"icon": null
+	},
+	{
+		"id": "remolacha.Monitor",
+		"name": "Monitor",
+		"isSingleton": true,
+		"showInAppsMenu": true,
+		"icon": {
+			"type": "material-icon",
+			"id": "query_stats"
+		}
 	}
 ]
