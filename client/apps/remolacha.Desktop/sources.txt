@@ -1,0 +1,13 @@
+backgrounds/1.jpg: https://pixabay.com/es/photos/remolacha-los-alimentos-dieta-687251/
+backgrounds/2.jpg: https://unsplash.com/photos/VOdONjAP_Lk
+backgrounds/3.jpg: https://pxhere.com/en/photo/1446221
+backgrounds/4.jpg: https://pixabay.com/es/photos/burak-remolachas-verduras-2091568/
+backgrounds/5.jpg: https://pixabay.com/es/photos/remolacha-vaihannes-verduras-3150856/
+backgrounds/6.jpg: https://pixabay.com/es/photos/remolacha-hortalizas-saludable-2512479/
+backgrounds/7.jpg: https://pixabay.com/es/photos/remolacha-ensalada-de-remolacha-1383758/
+backgrounds/8.jpg: https://pixabay.com/es/photos/remolacha-sopa-sopa-en-vidrio-1814251/
+backgrounds/9.jpg: https://pixabay.com/es/photos/vegetales-remolacha-los-alimentos-2485059/
+backgrounds/10.jpg: https://pixabay.com/es/photos/remolacha-jugo-jugo-de-remolacha-2512474/
+backgrounds/11.jpg: https://pixabay.com/es/photos/remolacha-hortalizas-saludable-3463259/
+backgrounds/12.jpg: https://pixabay.com/es/photos/remolacha-nabo-hortalizas-fresco-5793990/
+backgrounds/13.jpg: https://pixabay.com/es/photos/remolacha-hortalizas-3490809/
