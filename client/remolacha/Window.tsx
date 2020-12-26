@@ -31,9 +31,9 @@ interface WindowComponentState {
 
 class WindowComponent extends React.Component<WindowComponentProps, WindowComponentState> {
     private static TASKBAR_HEIGHT = 48;
-    private static BOTTOM_MARGIN = WindowComponent.TASKBAR_HEIGHT + 32 + 1;     // 32px for appbar, 1px for border.
-    private static LEFT_MARGIN = 32 + 32 * 3 + 1;                               // 32px arbitrary, 32px for each button, 1px for border.
-    private static RIGHT_MARGIN = 32 + 1;                                       // 32px arbitrary, 1px for border.
+    private static BOTTOM_MARGIN = WindowComponent.TASKBAR_HEIGHT + 32;     // 32px for appbar.
+    private static LEFT_MARGIN = 32 + 32 * 3;                               // 32px arbitrary, 32px for each button.
+    private static RIGHT_MARGIN = 32;                                       // 32px arbitrary.
 
     constructor(props : WindowComponentProps) {
         super(props);
@@ -76,15 +76,16 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
         
         if (this.state.maximized) {
             const width = this.getCurrentWidth();
+            const halfWidth = Math.floor(width / 2);
             
-            if (width > event.clientX) {
+            if (halfWidth > event.clientX) {
                 x = 0;
             }
-            else if (width > document.body.clientWidth - event.clientX) {
+            else if (halfWidth > document.body.clientWidth - event.clientX) {
                 x = document.body.clientWidth - width;
             }
             else {
-                x = event.clientX - Math.floor(width / 2);
+                x = event.clientX - halfWidth;
             }
 
             y = 0;
@@ -117,6 +118,14 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
             y: event.clientY + this.state.mouseAnchor.yDiff,
             maximized: false
         });
+    }
+
+    private onToolbarDoubleClick(event : React.MouseEvent<HTMLDivElement, MouseEvent>) {
+        if (event.target != event.currentTarget) {
+            return;
+        }
+
+        this.setState({maximized: !this.state.maximized});
     }
 
     private onMinimizeButtonClick() {
@@ -206,7 +215,8 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
 
         const windowClasses = generateClassName({
             remolacha_Window: true,
-            remolacha_WindowShowFrame: this.state.showFrame
+            remolacha_WindowShowFrame: this.state.showFrame,
+            remolacha_maximized: this.state.maximized
         });
 
         return (
@@ -216,6 +226,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
                         variant="dense"
                         disableGutters
                         onMouseDown={e => this.onToolbarMouseDown(e)}
+                        onDoubleClick={e => this.onToolbarDoubleClick(e)}
                     >
                         <Box flexGrow="1">
                             <Typography variant="subtitle2" color="inherit">
@@ -236,7 +247,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
                         </Button>
                     </Toolbar>
                 </AppBar>
-                <div ref={x => this.fillWithContent(x)}></div>
+                <div className="remolacha_content" ref={x => this.fillWithContent(x)}></div>
             </div>
         );
     }

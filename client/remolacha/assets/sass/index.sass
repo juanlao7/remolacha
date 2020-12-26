@@ -11,11 +11,16 @@ body,
 .remolacha_Window
     position: absolute
     overflow: hidden
+    display: flex
+    flex-direction: column
 
     &.remolacha_WindowShowFrame
-        border: 1px solid #CB2F70
         background: #fff
         +mdElevation(24)
+        
+        &:not(.remolacha_maximized) .remolacha_content
+            border: 1px solid #CB2F70
+            border-top: none
     
     .remolacha_topFrame
         .MuiToolbar-dense
@@ -33,6 +38,9 @@ body,
             height: 32px
             min-width: 32px
             padding: 0
+    
+    .remolacha_content
+        flex-grow: 1
 
     &:not(.remolacha_WindowShowFrame) .remolacha_topFrame
         display: none
