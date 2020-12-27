@@ -27,6 +27,7 @@ interface WindowComponentState {
     yBottom? : number;
     minWidth? : number;
     minHeight? : number;
+    minimized? : boolean;
     maximized? : boolean;
 }
 
@@ -60,6 +61,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
             yBottom: null,
             minWidth: WindowComponent.MIN_SIZE,
             minHeight: WindowComponent.MIN_SIZE,
+            minimized: false,
             maximized: false
         };
 
@@ -207,7 +209,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
     }
 
     private onMinimizeButtonClick() {
-        
+        this.setState({minimized: true});
     }
 
     private onMaximizeButtonClick() {
@@ -317,6 +319,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
         const windowClasses = generateClassName({
             remolacha_Window: true,
             remolacha_Window_showFrame: this.state.showFrame,
+            remolacha_Window_minimized: this.state.minimized,
             remolacha_Window_maximized: this.state.maximized
         });
 
