@@ -363,7 +363,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
                     <div className="remolacha_Window_topRightResizer" onMouseDown={e => this.onResizerMouseDown(e, true, true, false, false)} />
                     <div className="remolacha_Window_bottomRightResizer" onMouseDown={e => this.onResizerMouseDown(e, false, true, true, false)} />
                     <div className="remolacha_Window_topLeftResizer" onMouseDown={e => this.onResizerMouseDown(e, true, false, false, true)} />
-                    <div className="remolacha_Window_bottomLeftResizer" onMouseDown={e => this.onResizerMouseDown(e, false, true, false, true)} />
+                    <div className="remolacha_Window_bottomLeftResizer" onMouseDown={e => this.onResizerMouseDown(e, false, false, true, true)} />
                 </div>}
             </div>
         );
