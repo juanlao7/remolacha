@@ -18,38 +18,43 @@ interface TaskbarState {
 export default class Taskbar extends React.Component<TaskbarProps, TaskbarState> {
     constructor(props : TaskbarProps) {
         super(props);
-        const windows : Array<any> = new Array<any>();
+
+        this.state = {
+            windows: new Array<any>()
+        };
+
         const environment = remolacha.Environment.getInstance();
 
         for (const runningAppInstance of environment.getRunningAppInstances()) {
             for (const window of runningAppInstance.getWindows()) {
                 if (window.getState().showInTaskbar) {
-                    windows.push(window);
+                    this.state.windows.push(window);
                 }
             }
         }
 
-        environment.events.on('windowAdd', (emitter : any, window : any) => {
-            if (!window.getState().showInTaskbar) {
-                return;
-            }
+        environment.events.on('windowAdd', (emitter : any, window : any) => this.onEnvironmentWindowAdd(window));
+        environment.events.on('windowRemove', (emitter : any, window : any) => this.onEnvironmentWindowRemove(window));
+    }
 
-            this.state.windows.push(window);
-            this.setState({windows: windows});
-        });
+    private onEnvironmentWindowAdd(window : any) {
+        if (!window.getState().showInTaskbar) {
+            return;
+        }
 
-        environment.events.on('windowRemove', (emitter : any, removedWindow : any) => {
-            const index = this.state.windows.indexOf(removedWindow);
+        this.state.windows.push(window);
+        this.setState({windows: this.state.windows});
+    }
 
-            if (index < 0) {
-                return;
-            }
+    private onEnvironmentWindowRemove(window : any) {
+        const index = this.state.windows.indexOf(window);
 
-            this.state.windows.splice(index, 1);
-            this.setState({windows: windows});
-        });
+        if (index < 0) {
+            return;
+        }
 
-        this.state = {windows: windows};
+        this.state.windows.splice(index, 1);
+        this.setState({windows: this.state.windows});
     }
 
     private onRenderTaskButtonClick(window : any) {
@@ -66,6 +71,10 @@ export default class Taskbar extends React.Component<TaskbarProps, TaskbarState>
 
     private renderTaskButton(window : any) : JSX.Element {
         const windowState = window.getState();
+        
+        if (!windowState.showInTaskbar) {
+            return null;
+        }
 
         return (
             <Button

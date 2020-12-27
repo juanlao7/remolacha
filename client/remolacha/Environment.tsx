@@ -35,13 +35,13 @@ class EnvironmentComponent extends React.Component<EnvironmentComponentProps, En
         }
     }
 
-    addWindow(window : Window) {
+    addWindow(window : Window, callback : () => void) {
         if (this.state.windows.indexOf(window) >= 0) {
             return;
         }
 
         this.state.windows.push(window);
-        this.setState({windows: this.state.windows});
+        this.setState({windows: this.state.windows}, callback);
     }
 
     removeWindow(window : Window) {
@@ -102,13 +102,37 @@ export default class Environment {
         return Environment.instance;
     }
 
+    private onAppInstanceExit(appInstance : AppInstance) {
+        this.unloadAllCSS(appInstance);
+        const appId = appInstance.getAppManifest().id;
+
+        if (!this.appInstancesByAppId.has(appId)) {
+            return;
+        }
+
+        const instances = this.appInstancesByAppId.get(appId);
+        instances.delete(appInstance);
+
+        if (instances.size == 0) {
+            this.appInstancesByAppId.delete(appId);
+        }
+
+        this.appInstances.delete(appInstance.getId());
+    }
+
+    private onWindowDestroy(window : Window) {
+        this.removeWindow(window);
+    }
+
     addWindow(window : Window) {
-        this.environmentComponent.addWindow(window);
-        window.events.on('close', (emitter : any) => this.removeWindow(emitter));
-        this.events.fire('windowAdd', window);
+        this.environmentComponent.addWindow(window, () => {
+            window.events.on('destroy', emitter => this.onWindowDestroy(emitter));
+            this.events.fire('windowAdd', window);
+        });
     }
 
     removeWindow(window : Window) {
+        this.environmentComponent.removeWindow(window);
         this.events.fire('windowRemove', window);
     }
 
@@ -153,7 +177,7 @@ export default class Environment {
         }
 
         this.appInstancesByAppId.get(appManifest.id).add(appInstance);
-        // TODO: listen to exit event, to remove all references and unload CSS
+        appInstance.events.on('exit', (emitter) => this.onAppInstanceExit(emitter));
         
         if (!this.appInitializers.has(appManifest.id)) {
             await this.loadJS(`apps/${appId}/boot.js`);
@@ -219,6 +243,12 @@ export default class Environment {
         if (tuple[1].size == 0) {
             tuple[0].remove();
             this.loadedCSS.delete(url);
+        }
+    }
+
+    unloadAllCSS(appInstance : AppInstance) {
+        for (const url in this.loadedCSS) {
+            this.unloadCSS(appInstance, url);
         }
     }
 

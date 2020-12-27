@@ -32,11 +32,30 @@ interface WindowComponentState {
 }
 
 class WindowComponent extends React.Component<WindowComponentProps, WindowComponentState> {
-    private static TASKBAR_HEIGHT = 48;
-    private static BOTTOM_MARGIN = WindowComponent.TASKBAR_HEIGHT + 32;     // 32px for appbar.
-    private static LEFT_MARGIN = 32 + 32 * 3;                               // 32px arbitrary, 32px for each button.
-    private static RIGHT_MARGIN = 32;                                       // 32px arbitrary.
-    private static MIN_SIZE = WindowComponent.LEFT_MARGIN;
+    private static readonly TASKBAR_HEIGHT = 48;
+    private static readonly BOTTOM_MARGIN = WindowComponent.TASKBAR_HEIGHT + 32;     // 32px for appbar.
+    private static readonly LEFT_MARGIN = 32 + 32 * 3;                               // 32px arbitrary, 32px for each button.
+    private static readonly RIGHT_MARGIN = 32;                                       // 32px arbitrary.
+    private static readonly MIN_SIZE = WindowComponent.LEFT_MARGIN;
+
+    static readonly DEFAULT_STATE : WindowComponentState = {
+        title: '',
+        content: null,
+        showInTaskbar: true,
+        showFrame: true,
+        resizable: true,
+        preventGoingOutOfWindow: true,
+        x: 50,
+        y: 50,
+        width: 640,
+        height: 480,
+        xRight: null,
+        yBottom: null,
+        minWidth: WindowComponent.MIN_SIZE,
+        minHeight: WindowComponent.MIN_SIZE,
+        minimized: false,
+        maximized: false
+    };
 
     private anchorUpdate : (newMouseX : number, newMouseY : number) => void;
     private anchorStoredState : any;
@@ -45,27 +64,9 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
         super(props);
         this.anchorUpdate = null;
         this.anchorStoredState = null;
+        this.state = WindowComponent.DEFAULT_STATE;
 
-        this.state = {
-            title: '',
-            content: null,
-            showInTaskbar: true,
-            showFrame: true,
-            resizable: true,
-            preventGoingOutOfWindow: true,
-            x: 50,
-            y: 50,
-            width: 640,
-            height: 480,
-            xRight: null,
-            yBottom: null,
-            minWidth: WindowComponent.MIN_SIZE,
-            minHeight: WindowComponent.MIN_SIZE,
-            minimized: false,
-            maximized: false
-        };
-
-        // TODO: remove these listeners when the window is closed.
+        // TODO: remove these listeners when the window is destroyed.
         document.addEventListener('mouseup', e => this.onDocumentMouseUp(e));
         document.addEventListener('mousemove', e => this.onDocumentMouseMove(e));
         window.addEventListener('resize', () => this.forceUpdate());
@@ -95,23 +96,6 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
         }
 
         return 0;
-    }
-
-    private onDocumentMouseUp(event : MouseEvent) {
-        if (this.anchorUpdate != null) {
-            event.preventDefault();
-            this.anchorUpdate = null;
-            this.anchorStoredState = null;
-        }
-    }
-
-    private onDocumentMouseMove(event : MouseEvent) {
-        if (this.anchorUpdate == null) {
-            return;
-        }
-
-        event.preventDefault();
-        this.anchorUpdate(event.clientX, event.clientY);
     }
 
     private anchorMoveUpdate(newMouseX : number, newMouseY : number) {
@@ -166,6 +150,23 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
         this.setState(newState);
     }
 
+    private onDocumentMouseUp(event : MouseEvent) {
+        if (this.anchorUpdate != null) {
+            event.preventDefault();
+            this.anchorUpdate = null;
+            this.anchorStoredState = null;
+        }
+    }
+
+    private onDocumentMouseMove(event : MouseEvent) {
+        if (this.anchorUpdate == null) {
+            return;
+        }
+
+        event.preventDefault();
+        this.anchorUpdate(event.clientX, event.clientY);
+    }
+
     private onToolbarMouseDown(event : React.MouseEvent<HTMLDivElement, MouseEvent>) {
         if (event.target != event.currentTarget) {
             return;
@@ -217,7 +218,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
     }
 
     private onCloseButtonClick() {
-        
+        this.props.window.destroy();
     }
 
     private onResizerMouseDown(event : React.MouseEvent<HTMLDivElement, MouseEvent>, top : boolean, right : boolean, bottom : boolean, left : boolean) {
@@ -239,6 +240,10 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
             bottom: bottom,
             left : left
         };
+    }
+
+    componentDidMount() {
+        this.props.window.setWindowComponent(this);
     }
 
     componentDidUpdate() {
@@ -404,13 +409,12 @@ export default class Window {
         Window.lastInstanceId = this.id;
         this.windowComponent = null;
         this.pendingState = {};
-        this.jsxElement = <WindowComponent window={this} ref={x => this.onRef(x)} />;
+        this.jsxElement = <WindowComponent window={this} />;
         this.setState(state);
     }
 
-    private onRef(windowComponent : WindowComponent) {
-        this.windowComponent = windowComponent;
-        this.windowComponent.setState(this.pendingState);
+    setWindowComponent(windowComponent : WindowComponent) {
+        windowComponent.setState(this.pendingState, () => this.windowComponent = windowComponent);
     }
 
     getId() : number {
@@ -428,7 +432,7 @@ export default class Window {
 
     getState() : WindowComponentState {
         if (this.windowComponent == null) {
-            return this.pendingState;
+            return Object.assign({}, WindowComponent.DEFAULT_STATE, this.pendingState);
         }
 
         return this.windowComponent.state;
@@ -438,7 +442,8 @@ export default class Window {
         return this.jsxElement;
     }
 
-    close() {
-        this.events.fire('close');
+    destroy() {
+        this.events.fire('destroy');
+        Window.instances.delete(this.id);
     }
 }

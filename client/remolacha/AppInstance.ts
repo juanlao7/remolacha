@@ -1,8 +1,11 @@
 import Environment from './Environment';
 import AppManifest from './AppManifest';
 import Window from './Window';
+import EventManager from './EventManager';
 
 export default class AppInstance {
+    readonly events = new EventManager(this);
+
     private id : number;
     private appManifest : AppManifest;
     private windows : Set<Window>;
@@ -11,6 +14,10 @@ export default class AppInstance {
         this.id = id;
         this.appManifest = appManifest;
         this.windows = new Set<Window>();
+    }
+
+    private onWindowDestroy(window : Window) {
+        this.windows.delete(window);
     }
 
     getId() : number {
@@ -27,8 +34,8 @@ export default class AppInstance {
         }
 
         this.windows.add(window);
+        window.events.on('destroy', emitter => this.onWindowDestroy(emitter));
         Environment.getInstance().addWindow(window);
-        // TODO: listen to close event, and delete them from the set.
     }
 
     getWindows() : Set<Window> {
@@ -53,6 +60,6 @@ export default class AppInstance {
 
     exit() {
         // TODO: destroy all windows.
-        // TODO: emit exit event, so Environment can remove the instance from all collections and unload CSS.
+        this.events.fire('exit');
     }
 }
