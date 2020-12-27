@@ -25,7 +25,7 @@ export default class StartButton extends React.Component<StartButtonProps, Start
 
         return (
             <MenuItem
-                className="remolacha_Taskbar_startMenuItem"
+                className="remolacha_app_Taskbar_startMenuItem"
                 onClick={() => this.openApp(manifest.id)}
             >
                 <ListItemIcon>
@@ -48,7 +48,7 @@ export default class StartButton extends React.Component<StartButtonProps, Start
 
     render() {
         return (
-            <div className="remolacha_Taskbar_startButton">
+            <div className="remolacha_app_Taskbar_startButton">
                 <Button
                     onClick={(e) => this.setState({anchorElement: e.currentTarget})}
                     color="inherit"

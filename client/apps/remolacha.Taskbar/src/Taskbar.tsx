@@ -58,7 +58,7 @@ export default class Taskbar extends React.Component<TaskbarProps, TaskbarState>
         return (
             <Button
                 key={window.getId()}
-                className="remolacha_Taskbar_taskButton"
+                className="remolacha_app_Taskbar_taskButton"
                 color="inherit"
                 startIcon={<RemolachaIcon {...windowState.icon} />}
             >{windowState.title}</Button>
@@ -67,7 +67,7 @@ export default class Taskbar extends React.Component<TaskbarProps, TaskbarState>
 
     render() {
         return (
-            <AppBar position="static" className="remolacha_Taskbar_appBar">
+            <AppBar position="static" className="remolacha_app_Taskbar_appBar">
                 <Toolbar variant="dense" disableGutters>
                     <StartButton />
 

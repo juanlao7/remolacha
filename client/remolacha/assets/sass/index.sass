@@ -1,6 +1,8 @@
 @import ../css/reset.css
 @import md-material-shadows
 
+$window-resize-margin: 10px
+
 html,
 body,
 .remolacha_Environment
@@ -10,28 +12,33 @@ body,
 
 .remolacha_Window
     position: absolute
-    overflow: hidden
     display: flex
     flex-direction: column
 
-    &.remolacha_WindowShowFrame
+    &.remolacha_Window_showFrame
         background: #fff
         +mdElevation(24)
         
-        &:not(.remolacha_maximized) .remolacha_content
+        &:not(.remolacha_Window_maximized) .remolacha_Window_content
             border: 1px solid #CB2F70
             border-top: none
     
-    .remolacha_topFrame
+    .remolacha_Window_topFrame
+        overflow: hidden
+
         .MuiToolbar-dense
             min-height: 32px
 
             .MuiBox-root
                 pointer-events: none
+                min-width: 0
                 
                 h6
                     padding-left: 8px
                     user-select: none
+                    white-space: nowrap
+                    overflow: hidden
+                    text-overflow: ellipsis
 
         button
             border-radius: 0
@@ -39,8 +46,65 @@ body,
             min-width: 32px
             padding: 0
     
-    .remolacha_content
+    .remolacha_Window_content
         flex-grow: 1
+        overflow: hidden
+    
+    .remolacha_Window_resizers
+        position: absolute
+        top: 0
+        right: 0
+        bottom: 0
+        left: 0
 
-    &:not(.remolacha_WindowShowFrame) .remolacha_topFrame
-        display: none
+        div
+            position: absolute
+        
+        .remolacha_Window_topResizer,
+        .remolacha_Window_bottomResizer
+            height: $window-resize-margin
+            width: 100%
+            cursor: ns-resize
+        
+        .remolacha_Window_rightResizer,
+        .remolacha_Window_leftResizer
+            width: $window-resize-margin
+            height: 100%
+            cursor: ew-resize
+
+        .remolacha_Window_topRightResizer,
+        .remolacha_Window_bottomRightResizer,
+        .remolacha_Window_topLeftResizer,
+        .remolacha_Window_bottomLeftResizer
+            width: $window-resize-margin
+            height: $window-resize-margin
+
+        .remolacha_Window_topResizer,
+        .remolacha_Window_topRightResizer,
+        .remolacha_Window_topLeftResizer
+            margin-top: -$window-resize-margin
+        
+        .remolacha_Window_rightResizer,
+        .remolacha_Window_topRightResizer,
+        .remolacha_Window_bottomRightResizer
+            margin-right: -$window-resize-margin
+            right: 0
+
+        .remolacha_Window_bottomResizer,
+        .remolacha_Window_bottomRightResizer,
+        .remolacha_Window_bottomLeftResizer
+            margin-bottom: -$window-resize-margin
+            bottom: 0
+
+        .remolacha_Window_leftResizer,
+        .remolacha_Window_topLeftResizer,
+        .remolacha_Window_bottomLeftResizer
+            margin-left: -$window-resize-margin
+        
+        .remolacha_Window_topRightResizer,
+        .remolacha_Window_bottomLeftResizer
+            cursor: nesw-resize
+        
+        .remolacha_Window_topLeftResizer,
+        .remolacha_Window_bottomRightResizer
+            cursor: nwse-resize

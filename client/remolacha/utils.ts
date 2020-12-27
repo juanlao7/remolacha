@@ -11,6 +11,10 @@ export function generateClassName(classes : {[key: string] : boolean}) : string 
 }
 
 export function clamp(x : number, min : number, max : number) {
+    if (max < min) {
+        return x;
+    }
+    
     if (x < min) {
         return min;
     }

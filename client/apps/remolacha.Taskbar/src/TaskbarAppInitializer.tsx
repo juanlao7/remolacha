@@ -20,7 +20,7 @@ export default class TaskbarAppInitializer {
             content: content,
             showInTaskbar: false,
             showFrame: false,
-            sanitizeDimensions: false,
+            preventGoingOutOfWindow: false,
             x: 0,
             y: null,
             xRight: 0,

@@ -14,7 +14,7 @@ export default class ClockButton extends React.Component<ClockButtonProps, Clock
 
     render() {
         return (
-            <Button color="inherit" className="remolacha_Taskbar_clockButton">
+            <Button color="inherit" className="remolacha_app_Taskbar_clockButton">
                 19:34
                 <br/>
                 2020-12-12

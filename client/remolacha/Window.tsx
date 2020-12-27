@@ -6,14 +6,18 @@ import IconDefinition from './IconDefinition';
 import { clamp, generateClassName } from './utils';
 
 interface WindowComponentProps {
+    window : Window;
 }
+
+type AnchorProperty = 'x' | 'y' | 'width' | 'height' | 'xRight' | 'yBottom';
 
 interface WindowComponentState {
     title? : string;
     content? : HTMLElement;
     showInTaskbar? : boolean;
     showFrame? : boolean;
-    sanitizeDimensions? : boolean;
+    resizable? : boolean;
+    preventGoingOutOfWindow? : boolean;
     icon? : IconDefinition;
     x? : number;
     y? : number;
@@ -21,12 +25,9 @@ interface WindowComponentState {
     height? : number;
     xRight? : number;
     yBottom? : number;
+    minWidth? : number;
+    minHeight? : number;
     maximized? : boolean;
-    mouseAnchor? : {
-        xDiff : number;
-        yDiff : number;
-    };
-    window? : Window;
 }
 
 class WindowComponent extends React.Component<WindowComponentProps, WindowComponentState> {
@@ -34,35 +35,133 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
     private static BOTTOM_MARGIN = WindowComponent.TASKBAR_HEIGHT + 32;     // 32px for appbar.
     private static LEFT_MARGIN = 32 + 32 * 3;                               // 32px arbitrary, 32px for each button.
     private static RIGHT_MARGIN = 32;                                       // 32px arbitrary.
+    private static MIN_SIZE = WindowComponent.LEFT_MARGIN;
+
+    private anchorUpdate : (newMouseX : number, newMouseY : number) => void;
+    private anchorStoredState : any;
 
     constructor(props : WindowComponentProps) {
         super(props);
+        this.anchorUpdate = null;
+        this.anchorStoredState = null;
 
         this.state = {
             title: '',
             content: null,
             showInTaskbar: true,
             showFrame: true,
-            sanitizeDimensions: true,
+            resizable: true,
+            preventGoingOutOfWindow: true,
             x: 50,
             y: 50,
             width: 640,
             height: 480,
             xRight: null,
             yBottom: null,
-            maximized: false,
-            mouseAnchor: null,
-            window : null
+            minWidth: WindowComponent.MIN_SIZE,
+            minHeight: WindowComponent.MIN_SIZE,
+            maximized: false
         };
 
+        // TODO: remove these listeners when the window is closed.
         document.addEventListener('mouseup', e => this.onDocumentMouseUp(e));
         document.addEventListener('mousemove', e => this.onDocumentMouseMove(e));
+        window.addEventListener('resize', () => this.forceUpdate());
     }
 
     private fillWithContent(container : HTMLDivElement) {
         if (this.state.content != null && container != null) {
             container.appendChild(this.state.content);
         }
+    }
+
+    private getVerticalPositionBounds() : [number, number] {
+        if (!this.state.preventGoingOutOfWindow) {
+            return null;
+        }
+
+        return [0, document.body.clientHeight - WindowComponent.BOTTOM_MARGIN]
+    }
+
+    private getCurrentWidth() {
+        if (this.state.xRight != null) {
+            return (document.body.clientWidth - this.state.xRight) - this.state.x;
+        }
+        
+        if (this.state.width != null) {
+            return this.state.width;
+        }
+
+        return 0;
+    }
+
+    private onDocumentMouseUp(event : MouseEvent) {
+        if (this.anchorUpdate != null) {
+            event.preventDefault();
+            this.anchorUpdate = null;
+            this.anchorStoredState = null;
+        }
+    }
+
+    private onDocumentMouseMove(event : MouseEvent) {
+        if (this.anchorUpdate == null) {
+            return;
+        }
+
+        event.preventDefault();
+        this.anchorUpdate(event.clientX, event.clientY);
+    }
+
+    private anchorMoveUpdate(newMouseX : number, newMouseY : number) {
+        this.setState({
+            x: this.anchorStoredState.x + newMouseX,
+            y: this.anchorStoredState.y + newMouseY,
+            maximized: false
+        });
+    }
+
+    private anchorResizeUpdateImpl(newState : WindowComponentState, diff : number, startProperty : string, endProperty : string, positionProperty : AnchorProperty, dimensionProperty : AnchorProperty, positionBounds : [number, number], minDimension : number) {
+        // TODO: handle xRight and yBottom.
+
+        if (this.anchorStoredState[startProperty]) {
+            newState[positionProperty] = this.anchorStoredState[positionProperty] + diff;
+
+            if (positionBounds != null && positionBounds[0] <= positionBounds[1]) {
+                // Handling this.state.preventGoingOutOfWindow.
+                
+                if (newState[positionProperty] < positionBounds[0]) {
+                    diff += positionBounds[0] - newState[positionProperty];
+                    newState[positionProperty] = positionBounds[0];
+                }
+                else if (newState[positionProperty] > positionBounds[1]) {
+                    diff += positionBounds[1] - newState[positionProperty];
+                    newState[positionProperty] = positionBounds[1];
+                }
+            }
+            
+            if (this.anchorStoredState[dimensionProperty] != null) {
+                newState[dimensionProperty] = this.anchorStoredState[dimensionProperty] - diff;
+
+                if (newState[dimensionProperty] < minDimension) {
+                    // Avoiding negative dimensions.
+                    newState[positionProperty] -= minDimension - newState[dimensionProperty];
+                    newState[dimensionProperty] = minDimension;
+                }
+            }
+        }
+        else if (this.anchorStoredState[endProperty]) {
+            if (this.anchorStoredState[dimensionProperty] != null) {
+                // Negative dimensions are handled in componentDidUpdate.
+                newState[dimensionProperty] = this.anchorStoredState[dimensionProperty] + diff;
+            }
+        }
+    }
+
+    private anchorResizeUpdate(newMouseX : number, newMouseY : number) {
+        const newState : WindowComponentState = {maximized: false};
+        this.anchorResizeUpdateImpl(newState, newMouseX - this.anchorStoredState.mouseX, 'left', 'right', 'x', 'width', null, this.state.minWidth);
+        this.anchorResizeUpdateImpl(newState, newMouseY - this.anchorStoredState.mouseY, 'top', 'bottom', 'y', 'height', this.getVerticalPositionBounds(), this.state.minHeight);
+        this.setState(newState);
     }
 
     private onToolbarMouseDown(event : React.MouseEvent<HTMLDivElement, MouseEvent>) {
@@ -91,37 +190,16 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
             y = 0;
         }
 
-        this.setState({
-            mouseAnchor: {
-                xDiff: x - event.clientX,
-                yDiff: y - event.clientY
-            }
-        });
-    }
+        this.anchorUpdate = this.anchorMoveUpdate;
 
-    private onDocumentMouseUp(event : MouseEvent) {
-        if (this.state.mouseAnchor != null) {
-            event.preventDefault();
-            this.setState({mouseAnchor: null});
-        }
-    }
-
-    private onDocumentMouseMove(event : MouseEvent) {
-        if (this.state.mouseAnchor == null) {
-            return;
-        }
-
-        event.preventDefault();
-
-        this.setState({
-            x: event.clientX + this.state.mouseAnchor.xDiff,
-            y: event.clientY + this.state.mouseAnchor.yDiff,
-            maximized: false
-        });
+        this.anchorStoredState = {
+            x: x - event.clientX,
+            y: y - event.clientY
+        };
     }
 
     private onToolbarDoubleClick(event : React.MouseEvent<HTMLDivElement, MouseEvent>) {
-        if (event.target != event.currentTarget) {
+        if (event.target != event.currentTarget || !this.state.resizable) {
             return;
         }
 
@@ -140,24 +218,46 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
         
     }
 
-    private getCurrentWidth() {
-        if (this.state.xRight != null) {
-            return (document.body.clientWidth - this.state.xRight) - this.state.x;
-        }
+    private onResizerMouseDown(event : React.MouseEvent<HTMLDivElement, MouseEvent>, top : boolean, right : boolean, bottom : boolean, left : boolean) {
+        event.preventDefault();
         
-        if (this.state.width != null) {
-            return this.state.width;
-        }
+        this.anchorUpdate = this.anchorResizeUpdate;
 
-        return 0;
+        this.anchorStoredState = {
+            mouseX: event.clientX,
+            mouseY: event.clientY,
+            x: this.state.x,
+            y: this.state.y,
+            width: this.state.width,
+            height: this.state.height,
+            xRight: this.state.xRight,
+            yBottom: this.state.yBottom,
+            top: top,
+            right: right,
+            bottom: bottom,
+            left : left
+        };
     }
 
     componentDidUpdate() {
-        if (!this.state.sanitizeDimensions) {
-            return;
+        const corrections : WindowComponentState = {};
+
+        if (this.state.width < this.state.minWidth) {
+            corrections.width = this.state.minWidth;
         }
 
-        const corrections : WindowComponentState = {};
+        if (this.state.height < this.state.minHeight) {
+            corrections.height = this.state.minHeight;
+        }
+
+        if (Object.keys(corrections).length > 0) {
+            this.setState(corrections);
+            return;     // We set the new width and height before checking more constraints.
+        }
+
+        if (!this.state.preventGoingOutOfWindow) {
+            return;
+        }
 
         if (this.state.x != null) {
             const x = clamp(this.state.x, WindowComponent.LEFT_MARGIN - this.getCurrentWidth(), document.body.clientWidth - WindowComponent.RIGHT_MARGIN);
@@ -168,7 +268,8 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
         }
 
         if (this.state.y != null) {
-            const y = clamp(this.state.y, 0, document.body.clientHeight - WindowComponent.BOTTOM_MARGIN);
+            const bounds = this.getVerticalPositionBounds();
+            const y = clamp(this.state.y, bounds[0], bounds[1]);
 
             if (y != this.state.y) {
                 corrections.y = y;
@@ -215,13 +316,14 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
 
         const windowClasses = generateClassName({
             remolacha_Window: true,
-            remolacha_WindowShowFrame: this.state.showFrame,
-            remolacha_maximized: this.state.maximized
+            remolacha_Window_showFrame: this.state.showFrame,
+            remolacha_Window_maximized: this.state.maximized
         });
 
         return (
             <div className={windowClasses} style={style}>
-                <AppBar className="remolacha_topFrame" position="static">
+                {this.state.showFrame && 
+                <AppBar className="remolacha_Window_topFrame" position="static">
                     <Toolbar
                         variant="dense"
                         disableGutters
@@ -238,16 +340,31 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
                             <Icon>minimize</Icon>
                         </Button>
 
+                        {this.state.resizable &&
                         <Button color="inherit" onClick={() => this.onMaximizeButtonClick()}>
                             <Icon fontSize="small">{(this.state.maximized) ? 'filter_none' : 'crop_square'}</Icon>
-                        </Button>
+                        </Button>}
 
                         <Button color="inherit" onClick={() => this.onCloseButtonClick()}>
                             <Icon>close</Icon>
                         </Button>
                     </Toolbar>
-                </AppBar>
-                <div className="remolacha_content" ref={x => this.fillWithContent(x)}></div>
+                </AppBar>}
+
+                <div className="remolacha_Window_content" ref={x => this.fillWithContent(x)}></div>
+
+                {this.state.showFrame && this.state.resizable && !this.state.maximized &&
+                <div className="remolacha_Window_resizers">
+                    <div className="remolacha_Window_topResizer" onMouseDown={e => this.onResizerMouseDown(e, true, false, false, false)} />
+                    <div className="remolacha_Window_rightResizer" onMouseDown={e => this.onResizerMouseDown(e, false, true, false, false)} />
+                    <div className="remolacha_Window_bottomResizer" onMouseDown={e => this.onResizerMouseDown(e, false, false, true, false)} />
+                    <div className="remolacha_Window_leftResizer" onMouseDown={e => this.onResizerMouseDown(e, false, false, false, true)} />
+
+                    <div className="remolacha_Window_topRightResizer" onMouseDown={e => this.onResizerMouseDown(e, true, true, false, false)} />
+                    <div className="remolacha_Window_bottomRightResizer" onMouseDown={e => this.onResizerMouseDown(e, false, true, true, false)} />
+                    <div className="remolacha_Window_topLeftResizer" onMouseDown={e => this.onResizerMouseDown(e, true, false, false, true)} />
+                    <div className="remolacha_Window_bottomLeftResizer" onMouseDown={e => this.onResizerMouseDown(e, false, true, false, true)} />
+                </div>}
             </div>
         );
     }
@@ -284,8 +401,7 @@ export default class Window {
         Window.lastInstanceId = this.id;
         this.windowComponent = null;
         this.pendingState = {};
-        this.jsxElement = <WindowComponent ref={x => this.onRef(x)} />;
-        state.window = this;
+        this.jsxElement = <WindowComponent window={this} ref={x => this.onRef(x)} />;
         this.setState(state);
     }
 
