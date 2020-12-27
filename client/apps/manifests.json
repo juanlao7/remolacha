@@ -29,5 +29,15 @@
 			"type": "material-icon",
 			"id": "query_stats"
 		}
+	},
+	{
+		"id": "remolacha.Terminal",
+		"name": "Terminal",
+		"isSingleton": false,
+		"showInAppsMenu": true,
+		"icon": {
+			"type": "material-icon",
+			"id": "computer"
+		}
 	}
 ]
