@@ -406,10 +406,11 @@ export default class Window {
             throw new MaxInstancesReachedError('window', Window.MAX_INSTANCES);
         }
 
+        Window.instances.set(this.id, this);
         Window.lastInstanceId = this.id;
         this.windowComponent = null;
         this.pendingState = {};
-        this.jsxElement = <WindowComponent window={this} />;
+        this.jsxElement = <WindowComponent key={this.id} window={this} />;
         this.setState(state);
     }
 
