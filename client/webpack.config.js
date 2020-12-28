@@ -36,7 +36,7 @@ module.exports = {
         extensions: ['.tsx', '.ts', '.js']
     },
     plugins: [
-        new CleanWebpackPlugin(['dist']),
+        //new CleanWebpackPlugin(['dist']),
         new HtmlWebpackPlugin({
             template: 'index.ejs'
         }),

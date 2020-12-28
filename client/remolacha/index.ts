@@ -3,6 +3,7 @@ import Window from './Window';
 import AppNotFoundError from './AppNotFoundError';
 import MaxInstancesReachedError from './MaxInstancesReachedError';
 import UndefinedAppInitializerError from './UndefinedAppInitializerError';
+import * as utils from './utils';
 
 require('./assets/sass/index.sass');
 
@@ -11,7 +12,8 @@ export {
     Window,
     AppNotFoundError,
     MaxInstancesReachedError,
-    UndefinedAppInitializerError
+    UndefinedAppInitializerError,
+    utils
 };
 
 document.addEventListener('DOMContentLoaded', async () => {

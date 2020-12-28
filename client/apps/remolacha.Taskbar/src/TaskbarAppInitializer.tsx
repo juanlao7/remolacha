@@ -24,7 +24,9 @@ export default class TaskbarAppInitializer {
             x: 0,
             y: null,
             xRight: 0,
-            yBottom: 0
+            yBottom: 0,
+            focusable: false,
+            alwaysOnTop: true
         }));
     }
 }

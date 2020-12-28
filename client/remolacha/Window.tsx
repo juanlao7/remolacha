@@ -29,6 +29,9 @@ interface WindowComponentState {
     minHeight? : number;
     minimized? : boolean;
     maximized? : boolean;
+    focusable? : boolean;
+    focused? : boolean;
+    alwaysOnTop? : boolean;
 }
 
 class WindowComponent extends React.Component<WindowComponentProps, WindowComponentState> {
@@ -54,7 +57,10 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
         minWidth: WindowComponent.MIN_SIZE,
         minHeight: WindowComponent.MIN_SIZE,
         minimized: false,
-        maximized: false
+        maximized: false,
+        focusable: true,
+        focused: false,
+        alwaysOnTop: false
     };
 
     private anchorUpdate : (newMouseX : number, newMouseY : number) => void;
@@ -242,11 +248,27 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
         };
     }
 
+    private onWindowMouseDown() {
+        this.props.window.requestFocus();
+    }
+
     componentDidMount() {
         this.props.window.setWindowComponent(this);
     }
 
-    componentDidUpdate() {
+    componentDidUpdate(prevProps: Readonly<WindowComponentProps>, prevState: Readonly<WindowComponentState>) {
+        // Firing events.
+
+        if (prevState.minimized != this.state.minimized) {
+            if (this.state.minimized) {
+                this.props.window.requestBlur();
+            }
+            else {
+                this.props.window.requestFocus();
+            }
+        }
+
+        // Applying constraints.
         const corrections : WindowComponentState = {};
 
         if (this.state.width < this.state.minWidth) {
@@ -325,11 +347,17 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
             remolacha_Window: true,
             remolacha_Window_showFrame: this.state.showFrame,
             remolacha_Window_minimized: this.state.minimized,
-            remolacha_Window_maximized: this.state.maximized
+            remolacha_Window_maximized: this.state.maximized,
+            remolacha_Window_focused: this.state.focused,
+            remolacha_Window_alwaysOnTop: this.state.alwaysOnTop
         });
 
         return (
-            <div className={windowClasses} style={style}>
+            <div
+                className={windowClasses}
+                style={style}
+                onMouseDown={() => this.onWindowMouseDown()}
+            >
                 {this.state.showFrame && 
                 <AppBar className="remolacha_Window_topFrame" position="static">
                     <Toolbar
@@ -440,11 +468,25 @@ export default class Window {
     }
 
     getJSXElement() : JSX.Element {
+        if (!Window.instances.has(this.id)) {
+            throw new ReferenceError(`Window with id ${this.id} cannot be added to the environment because it is already destroyed.`);
+        }
+
         return this.jsxElement;
     }
 
     destroy() {
         this.events.fire('destroy');
         Window.instances.delete(this.id);
+    }
+
+    requestFocus() {
+        if (this.getState().focusable) {
+            this.events.fire('focusRequest');
+        }
+    }
+
+    requestBlur() {
+        this.events.fire('blurRequest');
     }
 }

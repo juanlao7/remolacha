@@ -35,6 +35,8 @@ export default class Taskbar extends React.Component<TaskbarProps, TaskbarState>
 
         environment.events.on('windowAdd', (emitter : any, window : any) => this.onEnvironmentWindowAdd(window));
         environment.events.on('windowRemove', (emitter : any, window : any) => this.onEnvironmentWindowRemove(window));
+        environment.events.on('windowFocus', () => this.onEnvironmentGeneralChange());
+        environment.events.on('windowBlur', () => this.onEnvironmentGeneralChange());
     }
 
     private onEnvironmentWindowAdd(window : any) {
@@ -57,12 +59,18 @@ export default class Taskbar extends React.Component<TaskbarProps, TaskbarState>
         this.setState({windows: this.state.windows});
     }
 
+    private onEnvironmentGeneralChange() {
+        this.forceUpdate();
+    }
+
     private onRenderTaskButtonClick(window : any) {
-        if (window.getState().minimized) {
+        const windowState = window.getState();
+
+        if (windowState.minimized) {
             window.setState({minimized: false});
         }
-        else if (false) {
-            // TODO: if window is not focused, give focus.
+        else if (!windowState.focused) {
+            window.requestFocus();
         }
         else {
             window.setState({minimized: true});
@@ -76,10 +84,16 @@ export default class Taskbar extends React.Component<TaskbarProps, TaskbarState>
             return null;
         }
 
+        const buttonClasses = remolacha.utils.generateClassName({
+            remolacha_app_Taskbar_taskButton: true,
+            remolacha_app_Taskbar_focused: windowState.focused,
+            remolacha_app_Taskbar_minimized: windowState.minimized
+        });
+
         return (
             <Button
                 key={window.getId()}
-                className="remolacha_app_Taskbar_taskButton"
+                className={buttonClasses}
                 color="inherit"
                 startIcon={<RemolachaIcon {...windowState.icon} />}
                 onClick={() => this.onRenderTaskButtonClick(window)}

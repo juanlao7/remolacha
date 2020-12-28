@@ -27,12 +27,25 @@ interface EnvironmentComponentState {
 }
 
 class EnvironmentComponent extends React.Component<EnvironmentComponentProps, EnvironmentComponentState> {
+    private lastFocusedWindow : Window;
+
     constructor(props : EnvironmentComponentProps) {
         super(props);
+        this.lastFocusedWindow = null;
         
         this.state = {
             windows: new Array<Window>()
         }
+    }
+
+    private removeWindowImpl(window : Window) {
+        const index = this.state.windows.indexOf(window);
+
+        if (index < 0) {
+            return;
+        }
+
+        this.state.windows.splice(index, 1);
     }
 
     addWindow(window : Window, callback : () => void) {
@@ -45,14 +58,35 @@ class EnvironmentComponent extends React.Component<EnvironmentComponentProps, En
     }
 
     removeWindow(window : Window) {
-        const index = this.state.windows.indexOf(window);
+        this.removeWindowImpl(window);
+        this.setState({windows : this.state.windows});
+    }
 
-        if (index < 0) {
+    focusWindow(window : Window) {
+        this.removeWindowImpl(window);
+        this.state.windows.push(window);
+        this.setState({windows : this.state.windows});
+    }
+
+    blurWindow(window : Window) {
+        this.removeWindowImpl(window);
+        this.state.windows.splice(0, 0, window);
+        this.setState({windows : this.state.windows});
+    }
+
+    componentDidUpdate() {
+        if (this.state.windows.length == 0 || this.state.windows[this.state.windows.length - 1] == this.lastFocusedWindow) {
             return;
         }
 
-        this.state.windows.splice(index, 1);
-        this.setState({windows : this.state.windows});
+        if (this.lastFocusedWindow != null) {
+            this.lastFocusedWindow.setState({focused: false});
+            Environment.getInstance().events.fire('windowBlur', this.lastFocusedWindow);
+        }
+        
+        this.lastFocusedWindow = this.state.windows[this.state.windows.length - 1];
+        this.lastFocusedWindow.setState({focused: true});
+        Environment.getInstance().events.fire('windowFocus', this.lastFocusedWindow);
     }
 
     render() {
@@ -124,9 +158,19 @@ export default class Environment {
         this.removeWindow(window);
     }
 
+    private onWindowFocusRequest(window : Window) {
+        this.environmentComponent.focusWindow(window);
+    }
+
+    private onWindowBlurRequest(window : Window) {
+        this.environmentComponent.blurWindow(window);
+    }
+
     addWindow(window : Window) {
         this.environmentComponent.addWindow(window, () => {
             window.events.on('destroy', emitter => this.onWindowDestroy(emitter));
+            window.events.on('focusRequest', emitter => this.onWindowFocusRequest(emitter));
+            window.events.on('blurRequest', emitter => this.onWindowBlurRequest(emitter));
             this.events.fire('windowAdd', window);
         });
     }

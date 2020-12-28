@@ -14,6 +14,10 @@ body,
     position: absolute
     display: flex
     flex-direction: column
+    z-index: 0      // To create a new zIndex context.
+
+    &.remolacha_Window_alwaysOnTop
+        z-index: 1
 
     &.remolacha_Window_minimized
         visibility: hidden
@@ -23,8 +27,16 @@ body,
         +mdElevation(24)
         
         &:not(.remolacha_Window_maximized) .remolacha_Window_content
-            border: 1px solid #CB2F70
+            border-width: 1px
+            border-style: solid
             border-top: none
+        
+    &:not(.remolacha_Window_focused)
+        .remolacha_Window_topFrame
+            background-color: #888
+
+        .remolacha_Window_content
+            border-color: #888
     
     .remolacha_Window_topFrame
         overflow: hidden
@@ -50,8 +62,10 @@ body,
             padding: 0
     
     .remolacha_Window_content
+        border-color: #CB2F70
         flex-grow: 1
         overflow: hidden
+        z-index: 0      // To create a new zIndex context.
     
     .remolacha_Window_resizers
         position: absolute
