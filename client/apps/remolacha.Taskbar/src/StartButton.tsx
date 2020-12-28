@@ -1,7 +1,6 @@
 import React from 'react';
 import { Button, Menu, MenuItem, Icon, ListItemIcon } from '@material-ui/core';
 import remolachaIconCode from '!raw-loader!../../../icons/remolacha.svg';
-import RemolachaIcon from '../../../remolacha/RemolachaIcon';
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
@@ -29,7 +28,7 @@ export default class StartButton extends React.Component<StartButtonProps, Start
                 onClick={() => this.openApp(manifest.id)}
             >
                 <ListItemIcon>
-                    <RemolachaIcon {...manifest.icon} />
+                    <remolacha.RemolachaIcon {...manifest.icon} />
                 </ListItemIcon>
 
                 {manifest.name}

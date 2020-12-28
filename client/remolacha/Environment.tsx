@@ -9,15 +9,8 @@ import MaxInstancesReachedError from './MaxInstancesReachedError';
 import UndefinedAppInitializerError from './UndefinedAppInitializerError';
 import manifestsJSON from '../apps/manifests.json';
 import EventManager from './EventManager';
-import { createMuiTheme, MuiThemeProvider } from '@material-ui/core';
-
-const theme = createMuiTheme({
-    palette: {
-        primary: {
-            main: '#CB2F70'
-        }
-    }
-});
+import theme from './theme';
+import { ThemeProvider } from '@material-ui/core';
 
 interface EnvironmentComponentProps {
 }
@@ -81,21 +74,19 @@ class EnvironmentComponent extends React.Component<EnvironmentComponentProps, En
 
         if (this.lastFocusedWindow != null) {
             this.lastFocusedWindow.setState({focused: false});
-            Environment.getInstance().events.fire('windowBlur', this.lastFocusedWindow);
         }
         
         this.lastFocusedWindow = this.state.windows[this.state.windows.length - 1];
         this.lastFocusedWindow.setState({focused: true});
-        Environment.getInstance().events.fire('windowFocus', this.lastFocusedWindow);
     }
 
     render() {
         return (
-            <MuiThemeProvider theme={theme}>
+            <ThemeProvider theme={theme}>
                 <div className="remolacha_Environment">
                     {this.state.windows.map(x => x.getJSXElement())}
                 </div>
-            </MuiThemeProvider>
+            </ThemeProvider>
         );
     }
 }
@@ -166,12 +157,15 @@ export default class Environment {
         this.environmentComponent.blurWindow(window);
     }
 
-    addWindow(window : Window) {
-        this.environmentComponent.addWindow(window, () => {
-            window.events.on('destroy', emitter => this.onWindowDestroy(emitter));
-            window.events.on('focusRequest', emitter => this.onWindowFocusRequest(emitter));
-            window.events.on('blurRequest', emitter => this.onWindowBlurRequest(emitter));
-            this.events.fire('windowAdd', window);
+    async addWindow(window : Window) : Promise<void> {
+        await new Promise(resolve => {
+            this.environmentComponent.addWindow(window, () => {
+                window.events.on('destroy', emitter => this.onWindowDestroy(emitter));
+                window.events.on('focusRequest', emitter => this.onWindowFocusRequest(emitter));
+                window.events.on('blurRequest', emitter => this.onWindowBlurRequest(emitter));
+                this.events.fire('windowAdd', window);
+                resolve(undefined);
+            });
         });
     }
 

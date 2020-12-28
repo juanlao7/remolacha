@@ -5,7 +5,7 @@ import Taskbar from './Taskbar';
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
 export default class TaskbarAppInitializer {
-    async open(appInstance : any, initialize : boolean, params : Map<string, any>) {
+    async open(appInstance : any, initialize : boolean, params : Map<string, any>) : Promise<void> {
         if (!initialize) {
             return;
         }
@@ -13,9 +13,8 @@ export default class TaskbarAppInitializer {
         await appInstance.loadCSS('apps/remolacha.Taskbar/bundle.css');
 
         const content = document.createElement('div');
-        ReactDOM.render(<Taskbar />, content);
 
-        appInstance.addWindow(new remolacha.Window({
+        await appInstance.addWindow(new remolacha.Window({
             title: 'Taskbar',
             content: content,
             showInTaskbar: false,
@@ -28,5 +27,7 @@ export default class TaskbarAppInitializer {
             focusable: false,
             alwaysOnTop: true
         }));
+
+        ReactDOM.render(<Taskbar />, content);
     }
 }

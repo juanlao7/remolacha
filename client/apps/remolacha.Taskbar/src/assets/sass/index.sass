@@ -1,5 +1,5 @@
 .remolacha_app_Taskbar_appBar
-    background: rgba(#000, 0.75)
+    background: rgba(#000, 0.75) !important
 
     button
         border-radius: 0
@@ -21,10 +21,10 @@
         &.remolacha_app_Taskbar_focused
             border-bottom: 1px solid
         
-        &.remolacha_app_Taskbar_minimized .MuiButton-label
+        &.remolacha_app_Taskbar_minimized > :first-child
             opacity: 0.5
 
-        .MuiButton-label
+        > :first-child
             text-overflow: ellipsis
             overflow: hidden
             display: inline

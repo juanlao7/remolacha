@@ -1,5 +1,5 @@
 export default class DesktopAppInitializer {
-    async open(appInstance : any, initialize : boolean, params : Map<string, any>) {
+    async open(appInstance : any, initialize : boolean, params : Map<string, any>) : Promise<void> {
         if (!initialize) {
             return;
         }

@@ -1,13 +1,16 @@
+import React from 'react';
+import ReactDOM from 'react-dom';
+import Monitor from './Monitor';
+
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
 export default class MonitorAppInitializer {
-    async open(appInstance : any, initialize : boolean, params : Map<string, any>) {
+    async open(appInstance : any, initialize : boolean, params : Map<string, any>) : Promise<void> {
         if (!initialize) {
             return;
         }
         
         const content = document.createElement('div');
-        content.textContent = 'Monitor!';
 
         const window = new remolacha.Window({
             title: 'Monitor',
@@ -19,6 +22,7 @@ export default class MonitorAppInitializer {
         });
 
         window.events.on('destroy', () => appInstance.exit());
-        appInstance.addWindow(window);
+        await appInstance.addWindow(window);
+        ReactDOM.render(<Monitor />, content);
     }
 }

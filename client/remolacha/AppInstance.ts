@@ -28,14 +28,14 @@ export default class AppInstance {
         return this.appManifest;
     }
 
-    addWindow(window : Window) {
+    async addWindow(window : Window) : Promise<void> {
         if (this.windows.has(window)) {
             return;
         }
 
         this.windows.add(window);
         window.events.on('destroy', emitter => this.onWindowDestroy(emitter));
-        Environment.getInstance().addWindow(window);
+        await Environment.getInstance().addWindow(window);
     }
 
     getWindows() : Set<Window> {

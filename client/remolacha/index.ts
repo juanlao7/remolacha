@@ -1,19 +1,23 @@
 import Environment from './Environment';
 import Window from './Window';
+import RemolachaIcon from './RemolachaIcon';
+import theme from './theme';
+import * as utils from './utils';
 import AppNotFoundError from './AppNotFoundError';
 import MaxInstancesReachedError from './MaxInstancesReachedError';
 import UndefinedAppInitializerError from './UndefinedAppInitializerError';
-import * as utils from './utils';
 
 require('./assets/sass/index.sass');
 
 export {
     Environment,
     Window,
+    RemolachaIcon,
+    theme,
+    utils,
     AppNotFoundError,
     MaxInstancesReachedError,
     UndefinedAppInitializerError,
-    utils
 };
 
 document.addEventListener('DOMContentLoaded', async () => {

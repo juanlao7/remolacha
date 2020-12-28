@@ -1,8 +1,8 @@
 import React from 'react';
-import { AppBar, Toolbar, Box, Button } from '@material-ui/core';
+import { AppBar, Toolbar, Box } from '@material-ui/core';
 import StartButton from './StartButton';
 import ClockButton from './ClockButton';
-import RemolachaIcon from '../../../remolacha/RemolachaIcon';
+import TaskButton from './TaskButton';
 
 require('./assets/sass/index.sass');
 
@@ -27,23 +27,15 @@ export default class Taskbar extends React.Component<TaskbarProps, TaskbarState>
 
         for (const runningAppInstance of environment.getRunningAppInstances()) {
             for (const window of runningAppInstance.getWindows()) {
-                if (window.getState().showInTaskbar) {
-                    this.state.windows.push(window);
-                }
+                this.state.windows.push(window);
             }
         }
 
         environment.events.on('windowAdd', (emitter : any, window : any) => this.onEnvironmentWindowAdd(window));
         environment.events.on('windowRemove', (emitter : any, window : any) => this.onEnvironmentWindowRemove(window));
-        environment.events.on('windowFocus', () => this.onEnvironmentGeneralChange());
-        environment.events.on('windowBlur', () => this.onEnvironmentGeneralChange());
     }
 
     private onEnvironmentWindowAdd(window : any) {
-        if (!window.getState().showInTaskbar) {
-            return;
-        }
-
         this.state.windows.push(window);
         this.setState({windows: this.state.windows});
     }
@@ -59,48 +51,6 @@ export default class Taskbar extends React.Component<TaskbarProps, TaskbarState>
         this.setState({windows: this.state.windows});
     }
 
-    private onEnvironmentGeneralChange() {
-        this.forceUpdate();
-    }
-
-    private onRenderTaskButtonClick(window : any) {
-        const windowState = window.getState();
-
-        if (windowState.minimized) {
-            window.setState({minimized: false});
-        }
-        else if (!windowState.focused) {
-            window.requestFocus();
-        }
-        else {
-            window.setState({minimized: true});
-        }
-    }
-
-    private renderTaskButton(window : any) : JSX.Element {
-        const windowState = window.getState();
-        
-        if (!windowState.showInTaskbar) {
-            return null;
-        }
-
-        const buttonClasses = remolacha.utils.generateClassName({
-            remolacha_app_Taskbar_taskButton: true,
-            remolacha_app_Taskbar_focused: windowState.focused,
-            remolacha_app_Taskbar_minimized: windowState.minimized
-        });
-
-        return (
-            <Button
-                key={window.getId()}
-                className={buttonClasses}
-                color="inherit"
-                startIcon={<RemolachaIcon {...windowState.icon} />}
-                onClick={() => this.onRenderTaskButtonClick(window)}
-            >{windowState.title}</Button>
-        );
-    }
-
     render() {
         return (
             <AppBar position="static" className="remolacha_app_Taskbar_appBar">
@@ -108,7 +58,7 @@ export default class Taskbar extends React.Component<TaskbarProps, TaskbarState>
                     <StartButton />
 
                     <Box flexGrow="1">
-                        {this.state.windows.map(x => this.renderTaskButton(x))}
+                        {this.state.windows.map(x => <TaskButton key={'' + x.getId()} window={x} />)}
                     </Box>
 
                     <ClockButton />

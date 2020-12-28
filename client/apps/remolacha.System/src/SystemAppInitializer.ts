@@ -1,7 +1,7 @@
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
 export default class SystemAppInitializer {
-    async open(appInstance : any, initialize : boolean, params : Map<string, any>) {
+    async open(appInstance : any, initialize : boolean, params : Map<string, any>) : Promise<void> {
         if (!initialize) {
             // System can be initialized only once.
             return;

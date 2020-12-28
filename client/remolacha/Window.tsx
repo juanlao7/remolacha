@@ -268,6 +268,15 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
             }
         }
 
+        if (prevState.focused != this.state.focused) {
+            if (this.state.focused) {
+                this.props.window.events.fire('focus');
+            }
+            else {
+                this.props.window.events.fire('blur');
+            }
+        }
+
         // Applying constraints.
         const corrections : WindowComponentState = {};
 
@@ -358,6 +367,19 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
                 style={style}
                 onMouseDown={() => this.onWindowMouseDown()}
             >
+                {this.state.showFrame && this.state.resizable && !this.state.maximized &&
+                <div className="remolacha_Window_resizers">
+                    <div className="remolacha_Window_topResizer" onMouseDown={e => this.onResizerMouseDown(e, true, false, false, false)} />
+                    <div className="remolacha_Window_rightResizer" onMouseDown={e => this.onResizerMouseDown(e, false, true, false, false)} />
+                    <div className="remolacha_Window_bottomResizer" onMouseDown={e => this.onResizerMouseDown(e, false, false, true, false)} />
+                    <div className="remolacha_Window_leftResizer" onMouseDown={e => this.onResizerMouseDown(e, false, false, false, true)} />
+
+                    <div className="remolacha_Window_topRightResizer" onMouseDown={e => this.onResizerMouseDown(e, true, true, false, false)} />
+                    <div className="remolacha_Window_bottomRightResizer" onMouseDown={e => this.onResizerMouseDown(e, false, true, true, false)} />
+                    <div className="remolacha_Window_topLeftResizer" onMouseDown={e => this.onResizerMouseDown(e, true, false, false, true)} />
+                    <div className="remolacha_Window_bottomLeftResizer" onMouseDown={e => this.onResizerMouseDown(e, false, false, true, true)} />
+                </div>}
+
                 {this.state.showFrame && 
                 <AppBar className="remolacha_Window_topFrame" position="static">
                     <Toolbar
@@ -366,7 +388,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
                         onMouseDown={e => this.onToolbarMouseDown(e)}
                         onDoubleClick={e => this.onToolbarDoubleClick(e)}
                     >
-                        <Box flexGrow="1">
+                        <Box className="remolacha_Window_titleBox" flexGrow="1">
                             <Typography variant="subtitle2" color="inherit">
                                 {this.state.title}
                             </Typography>
@@ -388,19 +410,6 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
                 </AppBar>}
 
                 <div className="remolacha_Window_content" ref={x => this.fillWithContent(x)}></div>
-
-                {this.state.showFrame && this.state.resizable && !this.state.maximized &&
-                <div className="remolacha_Window_resizers">
-                    <div className="remolacha_Window_topResizer" onMouseDown={e => this.onResizerMouseDown(e, true, false, false, false)} />
-                    <div className="remolacha_Window_rightResizer" onMouseDown={e => this.onResizerMouseDown(e, false, true, false, false)} />
-                    <div className="remolacha_Window_bottomResizer" onMouseDown={e => this.onResizerMouseDown(e, false, false, true, false)} />
-                    <div className="remolacha_Window_leftResizer" onMouseDown={e => this.onResizerMouseDown(e, false, false, false, true)} />
-
-                    <div className="remolacha_Window_topRightResizer" onMouseDown={e => this.onResizerMouseDown(e, true, true, false, false)} />
-                    <div className="remolacha_Window_bottomRightResizer" onMouseDown={e => this.onResizerMouseDown(e, false, true, true, false)} />
-                    <div className="remolacha_Window_topLeftResizer" onMouseDown={e => this.onResizerMouseDown(e, true, false, false, true)} />
-                    <div className="remolacha_Window_bottomLeftResizer" onMouseDown={e => this.onResizerMouseDown(e, false, false, true, true)} />
-                </div>}
             </div>
         );
     }
