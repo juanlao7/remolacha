@@ -9,29 +9,32 @@
     .remolacha_app_Taskbar_clockButton
         padding: 0 8px
         font-weight: normal
+    
+    .remolacha_app_Taskbar_tasks
+        flex-grow: 1
 
-    .remolacha_app_Taskbar_taskButton
-        width: 192px
-        text-align: left
-        text-transform: none
-        margin: 0 4px
-        white-space: nowrap
-        padding: 0 12px
+        .remolacha_app_Taskbar_taskButton
+            width: 192px
+            text-align: left
+            text-transform: none
+            margin: 0 4px
+            white-space: nowrap
+            padding: 0 12px
 
-        &.remolacha_app_Taskbar_focused
-            border-bottom: 1px solid
-        
-        &.remolacha_app_Taskbar_minimized > :first-child
-            opacity: 0.5
+            &.remolacha_app_Taskbar_focused
+                border-bottom: 1px solid
+            
+            &.remolacha_app_Taskbar_minimized > :first-child
+                opacity: 0.5
 
-        > :first-child
-            text-overflow: ellipsis
-            overflow: hidden
-            display: inline
-
-            > span
+            > :first-child
+                text-overflow: ellipsis
+                overflow: hidden
                 display: inline
-                vertical-align: middle
+
+                > span
+                    display: inline
+                    vertical-align: middle
     
 .remolacha_app_Taskbar_startMenuItem
     min-height: 48px

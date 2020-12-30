@@ -57,9 +57,10 @@ export default class Taskbar extends React.Component<TaskbarProps, TaskbarState>
                 <Toolbar variant="dense" disableGutters>
                     <StartButton />
 
-                    <Box flexGrow="1">
-                        {this.state.windows.map(x => <TaskButton key={'' + x.getId()} window={x} />)}
-                    </Box>
+                    <div className="remolacha_app_Taskbar_tasks">
+                        {this.state.windows.map(window => (
+                        <TaskButton key={'' + window.getId()} window={window} />))}
+                    </div>
 
                     <ClockButton />
                 </Toolbar>

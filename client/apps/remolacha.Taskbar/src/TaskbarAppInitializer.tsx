@@ -10,23 +10,24 @@ export default class TaskbarAppInitializer {
             return;
         }
 
-        await appInstance.loadCSS('apps/remolacha.Taskbar/bundle.css');
-
         const content = document.createElement('div');
 
-        await appInstance.addWindow(new remolacha.Window({
-            title: 'Taskbar',
-            content: content,
-            showInTaskbar: false,
-            showFrame: false,
-            preventGoingOutOfWindow: false,
-            x: 0,
-            y: null,
-            xRight: 0,
-            yBottom: 0,
-            focusable: false,
-            alwaysOnTop: true
-        }));
+        await Promise.all([
+            appInstance.loadCSS('apps/remolacha.Taskbar/bundle.css'),
+            appInstance.addWindow(new remolacha.Window({
+                title: 'Taskbar',
+                content: content,
+                showInTaskbar: false,
+                showFrame: false,
+                preventGoingOutOfWindow: false,
+                x: 0,
+                y: null,
+                xRight: 0,
+                yBottom: 0,
+                focusable: false,
+                alwaysOnTop: true
+            }))
+        ]);
 
         ReactDOM.render(<Taskbar />, content);
     }
