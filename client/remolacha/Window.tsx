@@ -104,6 +104,16 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
         return 0;
     }
 
+    private propertiesHaveChanged(properties : Array<keyof WindowComponentState>, prevState : WindowComponentState) {
+        for (const property of properties) {
+            if (this.state[property] != prevState[property]) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private anchorMoveUpdate(newMouseX : number, newMouseY : number) {
         this.setState({
             x: this.anchorStoredState.x + newMouseX,
@@ -259,7 +269,12 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
     componentDidUpdate(prevProps: Readonly<WindowComponentProps>, prevState: Readonly<WindowComponentState>) {
         // Firing events.
 
-        if (prevState.minimized != this.state.minimized) {
+        if (this.propertiesHaveChanged(['width', 'height'], prevState)) {
+            // TODO: handle xRight and yBottom changes.
+            this.props.window.events.fire('resize');
+        }
+
+        if (this.propertiesHaveChanged(['minimized'], prevState)) {
             if (this.state.minimized) {
                 this.props.window.requestBlur();
             }
@@ -268,7 +283,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
             }
         }
 
-        if (prevState.focused != this.state.focused) {
+        if (this.propertiesHaveChanged(['focused'], prevState)) {
             if (this.state.focused) {
                 this.props.window.events.fire('focus');
             }
@@ -388,11 +403,9 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
                         onMouseDown={e => this.onToolbarMouseDown(e)}
                         onDoubleClick={e => this.onToolbarDoubleClick(e)}
                     >
-                        <Box className="remolacha_Window_titleBox" flexGrow="1">
-                            <Typography variant="subtitle2" color="inherit">
-                                {this.state.title}
-                            </Typography>
-                        </Box>
+                        <Typography className="remolacha_Window_titleBox" variant="subtitle2" color="inherit">
+                            {this.state.title}
+                        </Typography>
 
                         <Button color="inherit" onClick={() => this.onMinimizeButtonClick()}>
                             <Icon>minimize</Icon>
