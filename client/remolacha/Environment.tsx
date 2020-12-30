@@ -292,7 +292,7 @@ export default class Environment {
     }
 
     unloadAllCSS(appInstance : AppInstance) {
-        for (const url in this.loadedCSS) {
+        for (const url of this.loadedCSS.keys()) {
             this.unloadCSS(appInstance, url);
         }
     }
