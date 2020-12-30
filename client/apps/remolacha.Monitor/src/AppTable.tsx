@@ -85,10 +85,6 @@ export default class AppTable extends React.Component<AppTableProps, AppTableSta
         });
     }
 
-    private onRunAppClick() {
-
-    }
-
     private onKillClick() {
         let error : Error = null;
 
@@ -135,11 +131,13 @@ export default class AppTable extends React.Component<AppTableProps, AppTableSta
                         </Typography>
 
                         {(this.state.selected.size == 0) ?
+                            null
+                            /*TODO: run remolacha.Runner when that app exists.
                             <Button
                                 variant="outlined"
                                 color="inherit"
                                 onClick={() => this.onRunAppClick()}
-                            >Run app</Button>
+                            >Run app</Button>*/
                         :
                             <Button
                                 variant="outlined"

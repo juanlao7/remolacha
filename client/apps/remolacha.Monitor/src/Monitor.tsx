@@ -37,7 +37,6 @@ export default class Monitor extends React.Component<MonitorProps, MonitorState>
                         onChange={(e, x) => this.onTabChange(x)}
                     >
                         <Tab label="Processes" />
-                        <Tab label="Resources" />
                         <Tab label="Apps" />
                     </Tabs>
                 </AppBar>
@@ -48,7 +47,6 @@ export default class Monitor extends React.Component<MonitorProps, MonitorState>
                     onChangeIndex={(x : number) => this.onTabChange(x)}
                 >
                     <div>Processes</div>
-                    <div>Resources</div>
                     <AppTable />
                 </SwipeableViews>
             </ThemeProvider>
