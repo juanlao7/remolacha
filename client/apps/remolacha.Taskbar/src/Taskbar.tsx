@@ -4,8 +4,6 @@ import StartButton from './StartButton';
 import ClockButton from './ClockButton';
 import TaskButton from './TaskButton';
 
-require('./assets/sass/index.sass');
-
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
 interface TaskbarProps {

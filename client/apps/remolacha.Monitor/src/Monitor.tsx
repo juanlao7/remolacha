@@ -3,8 +3,6 @@ import { ThemeProvider, AppBar, Tabs, Tab } from '@material-ui/core';
 import SwipeableViews from 'react-swipeable-views';
 import AppTable from './AppTable';
 
-require('./assets/sass/index.sass');
-
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
 interface MonitorProps {
