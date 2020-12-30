@@ -11,6 +11,7 @@ export default class MonitorAppInitializer {
         }
         
         const content = document.createElement('div');
+        content.className = 'remolacha_app_Monitor';
 
         const window = new remolacha.Window({
             title: 'Monitor',
@@ -18,11 +19,18 @@ export default class MonitorAppInitializer {
             icon: {
                 type: 'material-icon',
                 id: 'query_stats'
-            }
+            },
+            width: 481,
+            height: 645
         });
 
         window.events.on('destroy', () => appInstance.exit());
-        await appInstance.addWindow(window);
-        ReactDOM.render(<Monitor />, content);
+
+        await Promise.all([
+            appInstance.loadCSS('apps/remolacha.Monitor/bundle.css'),
+            appInstance.addWindow(window)
+        ]);
+
+        ReactDOM.render(<Monitor window={window} />, content);
     }
 }

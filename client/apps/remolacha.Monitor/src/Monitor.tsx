@@ -1,10 +1,14 @@
 import React from 'react';
 import { ThemeProvider, AppBar, Tabs, Tab } from '@material-ui/core';
 import SwipeableViews from 'react-swipeable-views';
+import AppTable from './AppTable';
+
+require('./assets/sass/index.sass');
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
 interface MonitorProps {
+    window: any;        // TODO: type remolacha.Window
 }
 
 interface MonitorState {
@@ -15,6 +19,7 @@ export default class Monitor extends React.Component<MonitorProps, MonitorState>
     constructor(props: MonitorProps) {
         super(props);
         this.state = {selectedTabIndex: 0};
+        this.props.window.events.on('resize', () => this.forceUpdate());    // To update tabs.
     }
 
     private onTabChange(newIndex: number) {
@@ -37,10 +42,14 @@ export default class Monitor extends React.Component<MonitorProps, MonitorState>
                     </Tabs>
                 </AppBar>
 
-                <SwipeableViews index={this.state.selectedTabIndex} onChangeIndex={(x : number) => this.onTabChange(x)}>
-                    <div><button>A</button></div>
-                    <div>B</div>
-                    <div>C</div>
+                <SwipeableViews
+                    className="remolacha_app_Monitor_views"
+                    index={this.state.selectedTabIndex}
+                    onChangeIndex={(x : number) => this.onTabChange(x)}
+                >
+                    <div>Processes</div>
+                    <div>Resources</div>
+                    <AppTable />
                 </SwipeableViews>
             </ThemeProvider>
         );
