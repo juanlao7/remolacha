@@ -269,7 +269,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
     componentDidUpdate(prevProps: Readonly<WindowComponentProps>, prevState: Readonly<WindowComponentState>) {
         // Firing events.
 
-        if (this.propertiesHaveChanged(['width', 'height'], prevState)) {
+        if (this.propertiesHaveChanged(['width', 'height', 'maximized'], prevState)) {
             // TODO: handle xRight and yBottom changes.
             this.props.window.events.fire('resize');
         }
