@@ -2,18 +2,23 @@ import Environment from './Environment';
 import AppManifest from './AppManifest';
 import Window from './Window';
 import EventManager from './EventManager';
+import PermissionDeniedError from './PermissionDeniedError';
 
 export default class AppInstance {
+    private static readonly FIRST_INSTANCE_ID = 1;
+
     readonly events = new EventManager(this);
 
     private id : number;
     private appManifest : AppManifest;
     private windows : Set<Window>;
+    private exiting : boolean;
 
     constructor(id : number, appManifest : AppManifest) {
         this.id = id;
         this.appManifest = appManifest;
         this.windows = new Set<Window>();
+        this.exiting = false;
     }
 
     private onWindowDestroy(window : Window) {
@@ -59,7 +64,21 @@ export default class AppInstance {
     }
 
     exit() {
-        // TODO: destroy all windows.
+        if (this.id == AppInstance.FIRST_INSTANCE_ID) {
+            throw new PermissionDeniedError(`It is not permitted to kill the app instance with ID ${AppInstance.FIRST_INSTANCE_ID}.`);
+        }
+
+        if (this.exiting) {
+            // To prevent calling this method again on window destroy.
+            return;
+        }
+
+        this.exiting = true;
+
+        for (const window of this.windows) {
+            window.destroy();
+        }
+
         this.events.fire('exit');
     }
 }
