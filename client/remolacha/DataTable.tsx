@@ -23,7 +23,7 @@ interface DataTableProps {
 }
 
 interface DataTableState {
-    orderBy? : string;
+    orderBy? : number;
     order? : Order;
 }
 
@@ -58,7 +58,7 @@ export default class DataTable extends React.Component<DataTableProps, DataTable
 
         stabilizedThis.sort((a, b) => {
             const order = comparator(a[0], b[0]);
-
+            
             if (order != 0) {
                 return order;
             }
@@ -69,13 +69,13 @@ export default class DataTable extends React.Component<DataTableProps, DataTable
         return stabilizedThis;
     }
 
-    private onTableSortLabelClick(columnId : string) {
+    private onTableSortLabelClick(columnIndex : number) {
         const newState : DataTableState = {
-            orderBy: columnId,
+            orderBy: columnIndex,
             order: 'asc'
         };
 
-        if (this.state.orderBy == columnId) {
+        if (this.state.orderBy == columnIndex) {
             if (this.state.order == 'asc') {
                 newState.order = 'desc';
             }
@@ -94,17 +94,17 @@ export default class DataTable extends React.Component<DataTableProps, DataTable
                 <Table size={this.props.size} padding={this.props.padding}>
                     <TableHead>
                         <TableRow>
-                            {this.props.columns.map((column) => (
+                            {this.props.columns.map((column, columnIndex) => (
                                 <TableCell
                                     key={column.id}
                                     align={column.align}
                                     padding={column.headCellPadding}
-                                    sortDirection={(this.state.orderBy == column.id) ? this.state.order : false}
+                                    sortDirection={(this.state.orderBy == columnIndex) ? this.state.order : false}
                                 >
                                     <TableSortLabel
-                                        active={this.state.orderBy == column.id}
-                                        direction={(this.state.orderBy == column.id) ? this.state.order : 'asc'}
-                                        onClick={() => this.onTableSortLabelClick(column.id)}
+                                        active={this.state.orderBy == columnIndex}
+                                        direction={(this.state.orderBy == columnIndex) ? this.state.order : 'asc'}
+                                        onClick={() => this.onTableSortLabelClick(columnIndex)}
                                     >
                                         {column.content}
                                     </TableSortLabel>
