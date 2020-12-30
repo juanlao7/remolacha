@@ -7,6 +7,7 @@ declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolac
 export default class MonitorAppInitializer {
     async open(appInstance : any, initialize : boolean, params : Map<string, any>) : Promise<void> {
         if (!initialize) {
+            Array.from<any>(appInstance.getWindows())[0].requestFocus();
             return;
         }
         
