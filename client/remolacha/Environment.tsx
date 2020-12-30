@@ -143,6 +143,7 @@ export default class Environment {
         }
 
         this.appInstances.delete(appInstance.getId());
+        this.events.fire('appInstanceExit', appInstance);
     }
 
     private onWindowDestroy(window : Window) {
@@ -178,6 +179,11 @@ export default class Environment {
         return Array.from(this.installedAppManifests.values());
     }
 
+    private async openAppImpl(appManifest : AppManifest, appInstance : AppInstance, initialize : boolean, params : Map<string, any>) {
+        await this.appInitializers.get(appManifest.id).open(appInstance, initialize, params);
+        this.events.fire('appInstanceOpen', appInstance);
+    }
+
     async openApp(appId : string, params : Map<string, any> = new Map<string, any>()) : Promise<AppInstance> {
         if (!this.installedAppManifests.has(appId)) {
             throw new AppNotFoundError(appId);
@@ -188,7 +194,7 @@ export default class Environment {
         if (appManifest.isSingleton && this.appInstancesByAppId.has(appManifest.id)) {
             // It is a singleton and an instance already exists.
             const appInstance : AppInstance = this.appInstancesByAppId.get(appManifest.id).values().next().value;
-            await this.appInitializers.get(appManifest.id).open(appInstance, false, params);
+            await this.openAppImpl(appManifest, appInstance, false, params);
             return appInstance;
         }
 
@@ -215,7 +221,7 @@ export default class Environment {
         }
 
         this.appInstancesByAppId.get(appManifest.id).add(appInstance);
-        appInstance.events.on('exit', (emitter) => this.onAppInstanceExit(emitter));
+        appInstance.events.on('exit', emitter => this.onAppInstanceExit(emitter));
         
         if (!this.appInitializers.has(appManifest.id)) {
             await this.loadJS(`apps/${appId}/boot.js`);
@@ -225,7 +231,8 @@ export default class Environment {
             throw new UndefinedAppInitializerError(appManifest.id);
         }
 
-        await this.appInitializers.get(appManifest.id).open(appInstance, true, params);
+        this.events.fire('appInstanceCreate', appInstance);
+        await this.openAppImpl(appManifest, appInstance, true, params);
         return appInstance;
     }
 
