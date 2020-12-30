@@ -1,5 +1,6 @@
 const path = require('path');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
     entry: path.resolve(__dirname, 'src', 'boot.ts'),
@@ -35,7 +36,13 @@ module.exports = {
         new MiniCssExtractPlugin({
             filename: 'bundle.css',
             chunkFilename: 'bundle.css'
-        })
+        }),
+        new CopyWebpackPlugin([
+            {
+                from: 'node_modules/xterm/css/xterm.css',
+                to: 'xterm.css'
+            }
+        ])
     ],
     externals: {
         react: 'React',
