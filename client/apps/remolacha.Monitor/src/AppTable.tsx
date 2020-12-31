@@ -28,7 +28,7 @@ export default class AppTable extends React.Component<AppTableProps, AppTableSta
         },
         {
             id: 'appInstanceId',
-            content: 'Instance'
+            content: 'Instance ID'
         }
     ];
 
@@ -123,7 +123,7 @@ export default class AppTable extends React.Component<AppTableProps, AppTableSta
                         <Typography variant="body1" color="inherit">
                             {(this.state.error == null) ?
                                 (this.state.selected.size == 0) ?
-                                    'List of apps running on client-side'
+                                    'App instances running on client-side'
                                 :
                                     `${this.state.selected.size} app instance${(this.state.selected.size == 1) ? '' : 's'} selected`
                             :
