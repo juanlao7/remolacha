@@ -12,7 +12,7 @@ $window-disabled-primary-color: #cc7e9f
         z-index: 1
 
     &.remolacha_Window_minimized
-        visibility: hidden
+        display: none
 
     &.remolacha_Window_showFrame
         background: #fff
@@ -112,10 +112,6 @@ $window-disabled-primary-color: #cc7e9f
             cursor: nwse-resize
 
     &:not(.remolacha_Window_focused)
-        &.remolacha_Window_focusable > *
-            // TODO: https://github.com/juanlao7/remolacha/issues/2
-            pointer-events: none
-
         > .remolacha_Window_content
             border-color: $window-disabled-primary-color
         

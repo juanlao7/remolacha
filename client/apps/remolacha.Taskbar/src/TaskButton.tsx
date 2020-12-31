@@ -23,6 +23,7 @@ export default class TaskButton extends React.Component<TaskButtonProps, TaskBut
 
         if (windowState.minimized) {
             this.props.window.setState({minimized: false});
+            this.props.window.requestFocus();
         }
         else if (!windowState.focused) {
             this.props.window.requestFocus();

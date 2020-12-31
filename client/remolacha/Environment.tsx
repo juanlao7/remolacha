@@ -20,25 +20,84 @@ interface EnvironmentComponentState {
 }
 
 class EnvironmentComponent extends React.Component<EnvironmentComponentProps, EnvironmentComponentState> {
+    // TODO: be responsive to changes in alwaysOnTop.
+
+    private windowsByZIndex : Array<Window>;
     private lastFocusedWindow : Window;
 
     constructor(props : EnvironmentComponentProps) {
         super(props);
+        this.windowsByZIndex = [];
         this.lastFocusedWindow = null;
         
         this.state = {
-            windows: new Array<Window>()
+            windows: []
         }
     }
 
-    private removeWindowImpl(window : Window) {
-        const index = this.state.windows.indexOf(window);
+    private removeWindowImpl(array : Array<Window>, window : Window) : number {
+        const index = array.indexOf(window);
 
         if (index < 0) {
-            return;
+            return -1;
         }
 
-        this.state.windows.splice(index, 1);
+        array.splice(index, 1);
+        return index;
+    }
+
+    private insertWindowInZIndexArray(window : Window, atFront : boolean) : number {
+        const alwaysOnTop = window.getState().alwaysOnTop;
+        let index = this.windowsByZIndex.length;
+
+        if (!alwaysOnTop) {
+            // Skip all existing alwaysOnTop windows.
+            
+            while (index > 0 && this.windowsByZIndex[index - 1].getState().alwaysOnTop) {
+                --index;
+            }
+        }
+
+        if (atFront) {
+            this.windowsByZIndex.splice(index, 0, window);
+            return index;
+        }
+
+        // Now we must insert the window at back of its "kind" (alwaysOnTop or normal).
+
+        if (!alwaysOnTop) {
+            // If it is a normal window, we simply insert it at index 0.
+            this.windowsByZIndex.splice(0, 0, window);
+            return 0;
+        }
+
+        // If it is an alwaysOnTop window, then we must insert it after the last normal window, skipping all existing alwaysOnTop windows.
+
+        while (index > 0 && this.windowsByZIndex[index - 1].getState().alwaysOnTop) {
+            --index;
+        }
+
+        this.windowsByZIndex.splice(index, 0, window);
+        return index;
+    }
+
+    private fixZIndexes(fromIndex : number) {
+        if (fromIndex < 0) {
+            return;
+        }
+        
+        for (let i = fromIndex; i < this.windowsByZIndex.length; ++i) {
+            this.windowsByZIndex[i].setState({zIndex: i});
+        }
+    }
+
+    private setFocused(window : Window) {
+        if (this.lastFocusedWindow != null) {
+            this.lastFocusedWindow.setState({focused: false});
+        }
+
+        this.lastFocusedWindow = window;
+        window.setState({focused: true});
     }
 
     addWindow(window : Window, callback : () => void) {
@@ -47,37 +106,44 @@ class EnvironmentComponent extends React.Component<EnvironmentComponentProps, En
         }
 
         this.state.windows.push(window);
+        const index = this.insertWindowInZIndexArray(window, true);
+        this.fixZIndexes(index);
+        this.setFocused(window);
+
         this.setState({windows: this.state.windows}, callback);
     }
 
     removeWindow(window : Window) {
-        this.removeWindowImpl(window);
+        this.removeWindowImpl(this.state.windows, window);
+        const index = this.removeWindowImpl(this.windowsByZIndex, window);
+        this.fixZIndexes(index);
+
         this.setState({windows : this.state.windows});
     }
 
     focusWindow(window : Window) {
-        this.removeWindowImpl(window);
-        this.state.windows.push(window);
-        this.setState({windows : this.state.windows});
+        const index = this.removeWindowImpl(this.windowsByZIndex, window);
+        this.insertWindowInZIndexArray(window, true);
+        this.fixZIndexes(index);
+        this.setFocused(window);
     }
 
     blurWindow(window : Window) {
-        this.removeWindowImpl(window);
-        this.state.windows.splice(0, 0, window);
-        this.setState({windows : this.state.windows});
-    }
-
-    componentDidUpdate() {
-        if (this.state.windows.length == 0 || this.state.windows[this.state.windows.length - 1] == this.lastFocusedWindow) {
+        if (window != this.lastFocusedWindow) {
             return;
         }
 
-        if (this.lastFocusedWindow != null) {
-            this.lastFocusedWindow.setState({focused: false});
+        window.setState({focused: false});
+
+        for (let i = this.windowsByZIndex.length - 1; i >= 0; --i) {
+            if (this.windowsByZIndex[i] != window && this.windowsByZIndex[i].getState().focusable) {
+                this.setFocused(this.windowsByZIndex[i]);
+                this.lastFocusedWindow = this.windowsByZIndex[i];
+                return;
+            }
         }
-        
-        this.lastFocusedWindow = this.state.windows[this.state.windows.length - 1];
-        this.lastFocusedWindow.setState({focused: true});
+
+        this.lastFocusedWindow = null;
     }
 
     render() {

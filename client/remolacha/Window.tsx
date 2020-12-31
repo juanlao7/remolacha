@@ -32,6 +32,7 @@ interface WindowComponentState {
     focusable? : boolean;
     focused? : boolean;
     alwaysOnTop? : boolean;
+    zIndex? : number;
 }
 
 class WindowComponent extends React.Component<WindowComponentProps, WindowComponentState> {
@@ -62,7 +63,8 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
         maximized: false,
         focusable: true,
         focused: false,
-        alwaysOnTop: false
+        alwaysOnTop: false,
+        zIndex: 0
     };
 
     private anchorUpdate : (newMouseX : number, newMouseY : number) => void;
@@ -83,7 +85,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
     }
 
     private fillWithContent(container : HTMLDivElement) {
-        if (this.state.content != null && container != null) {
+        if (this.state.content != null && container != null && container.firstChild == null) {
             container.appendChild(this.state.content);
         }
     }
@@ -295,13 +297,8 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
             this.props.window.events.fire('resize');
         }
 
-        if (this.propertiesHaveChanged(['minimized'], prevState)) {
-            if (this.state.minimized) {
-                this.props.window.requestBlur();
-            }
-            else {
-                this.props.window.requestFocus();
-            }
+        if (this.propertiesHaveChanged(['minimized'], prevState) && this.state.minimized) {
+            this.props.window.requestBlur();
         }
 
         if (this.propertiesHaveChanged(['focused'], prevState)) {
@@ -356,7 +353,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
     }
 
     render() {
-        const style : React.CSSProperties = {};
+        const style : React.CSSProperties = {zIndex: this.state.zIndex};
 
         if (this.state.maximized) {
             style.left = '0';
@@ -393,7 +390,6 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
             remolacha_Window_showFrame: this.state.showFrame,
             remolacha_Window_minimized: this.state.minimized,
             remolacha_Window_maximized: this.state.maximized,
-            remolacha_Window_focusable: this.state.focusable,
             remolacha_Window_focused: this.state.focused,
             remolacha_Window_alwaysOnTop: this.state.alwaysOnTop
         });
@@ -402,7 +398,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
             <div
                 className={windowClasses}
                 style={style}
-                onMouseDownCapture={() => this.onWindowMouseDown()}
+                onMouseDown={() => this.onWindowMouseDown()}
             >
                 {this.state.showFrame && this.state.resizable && !this.state.maximized &&
                 <div className="remolacha_Window_resizers">
