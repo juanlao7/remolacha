@@ -40,6 +40,8 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
     private static readonly LEFT_MARGIN = 32 + 32 * 3;                               // 32px arbitrary, 32px for each button.
     private static readonly RIGHT_MARGIN = 32;                                       // 32px arbitrary.
     private static readonly MIN_SIZE = WindowComponent.LEFT_MARGIN;
+    private static readonly MOVE_TIME_THRESHOLD = 400;
+    private static readonly MOVE_DISTANCE_THRESHOLD = 10;
 
     static readonly DEFAULT_STATE : WindowComponentState = {
         title: '',
@@ -65,11 +67,13 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
 
     private anchorUpdate : (newMouseX : number, newMouseY : number) => void;
     private anchorStoredState : any;
+    private lastToolbarMouseDownTimestamp : any;
 
     constructor(props : WindowComponentProps) {
         super(props);
         this.anchorUpdate = null;
         this.anchorStoredState = null;
+        this.lastToolbarMouseDownTimestamp = 0;
         this.state = WindowComponent.DEFAULT_STATE;
 
         // TODO: remove these listeners when the window is destroyed.
@@ -115,9 +119,15 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
     }
 
     private anchorMoveUpdate(newMouseX : number, newMouseY : number) {
+        if (!this.anchorStoredState.triggered && Date.now() - this.anchorStoredState.timestamp < WindowComponent.MOVE_TIME_THRESHOLD && Math.abs(this.anchorStoredState.mouseX - newMouseX) + Math.abs(this.anchorStoredState.mouseY - newMouseY) < WindowComponent.MOVE_DISTANCE_THRESHOLD) {
+            return;
+        }
+
+        this.anchorStoredState.triggered = true;
+
         this.setState({
-            x: this.anchorStoredState.x + newMouseX,
-            y: this.anchorStoredState.y + newMouseY,
+            x: this.anchorStoredState.x - this.anchorStoredState.mouseX + newMouseX,
+            y: this.anchorStoredState.y - this.anchorStoredState.mouseY + newMouseY,
             maximized: false
         });
     }
@@ -175,6 +185,8 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
     }
 
     private onDocumentMouseMove(event : MouseEvent) {
+        this.lastToolbarMouseDownTimestamp = 0;         // Double mouse down gets cancelled.
+
         if (this.anchorUpdate == null) {
             return;
         }
@@ -189,40 +201,49 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
         }
 
         event.preventDefault();
-        let x = this.state.x;
-        let y = this.state.y;
-        
-        if (this.state.maximized) {
-            const width = this.getCurrentWidth();
-            const halfWidth = Math.floor(width / 2);
+        const now = Date.now();
+
+        if (now - this.lastToolbarMouseDownTimestamp < WindowComponent.MOVE_TIME_THRESHOLD) {
+            // Double mouse down.
+
+            if (this.state.resizable) {
+                this.setState({maximized: !this.state.maximized});
+            }
+        }
+        else {
+            // Single mouse down.
+
+            this.anchorStoredState = {
+                mouseX: event.clientX,
+                mouseY: event.clientY,
+                timestamp: Date.now(),
+                triggered: false
+            };
+
+            this.anchorStoredState.x = this.state.x;
+            this.anchorStoredState.y = this.state.y;
             
-            if (halfWidth > event.clientX) {
-                x = 0;
-            }
-            else if (halfWidth > document.body.clientWidth - event.clientX) {
-                x = document.body.clientWidth - width;
-            }
-            else {
-                x = event.clientX - halfWidth;
+            if (this.state.maximized) {
+                const width = this.getCurrentWidth();
+                const halfWidth = Math.floor(width / 2);
+                
+                if (halfWidth > event.clientX) {
+                    this.anchorStoredState.x = 0;
+                }
+                else if (halfWidth > document.body.clientWidth - event.clientX) {
+                    this.anchorStoredState.x = document.body.clientWidth - width;
+                }
+                else {
+                    this.anchorStoredState.x = event.clientX - halfWidth;
+                }
+
+                this.anchorStoredState.y = 0;
             }
 
-            y = 0;
+            this.anchorUpdate = this.anchorMoveUpdate;
         }
 
-        this.anchorUpdate = this.anchorMoveUpdate;
-
-        this.anchorStoredState = {
-            x: x - event.clientX,
-            y: y - event.clientY
-        };
-    }
-
-    private onToolbarDoubleClick(event : React.MouseEvent<HTMLDivElement, MouseEvent>) {
-        if (event.target != event.currentTarget || !this.state.resizable) {
-            return;
-        }
-
-        this.setState({maximized: !this.state.maximized});
+        this.lastToolbarMouseDownTimestamp = now;
     }
 
     private onMinimizeButtonClick() {
@@ -372,6 +393,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
             remolacha_Window_showFrame: this.state.showFrame,
             remolacha_Window_minimized: this.state.minimized,
             remolacha_Window_maximized: this.state.maximized,
+            remolacha_Window_focusable: this.state.focusable,
             remolacha_Window_focused: this.state.focused,
             remolacha_Window_alwaysOnTop: this.state.alwaysOnTop
         });
@@ -380,7 +402,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
             <div
                 className={windowClasses}
                 style={style}
-                onMouseDown={() => this.onWindowMouseDown()}
+                onMouseDownCapture={() => this.onWindowMouseDown()}
             >
                 {this.state.showFrame && this.state.resizable && !this.state.maximized &&
                 <div className="remolacha_Window_resizers">
@@ -401,7 +423,6 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
                         variant="dense"
                         disableGutters
                         onMouseDown={e => this.onToolbarMouseDown(e)}
-                        onDoubleClick={e => this.onToolbarDoubleClick(e)}
                     >
                         <Typography className="remolacha_Window_titleBox" variant="subtitle2" color="inherit">
                             {this.state.title}
