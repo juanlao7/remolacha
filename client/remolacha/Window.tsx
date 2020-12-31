@@ -179,6 +179,10 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
     }
 
     private onDocumentMouseUp(event : MouseEvent) {
+        if (event.button != 0) {
+            return;
+        }
+
         if (this.anchorUpdate != null) {
             event.preventDefault();
             this.anchorUpdate = null;
@@ -198,7 +202,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
     }
 
     private onToolbarMouseDown(event : React.MouseEvent<HTMLDivElement, MouseEvent>) {
-        if (event.target != event.currentTarget) {
+        if (event.target != event.currentTarget || event.button != 0) {
             return;
         }
 
@@ -261,6 +265,10 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
     }
 
     private onResizerMouseDown(event : React.MouseEvent<HTMLDivElement, MouseEvent>, top : boolean, right : boolean, bottom : boolean, left : boolean) {
+        if (event.button != 0) {
+            return;
+        }
+
         event.preventDefault();
         
         this.anchorUpdate = this.anchorResizeUpdate;
