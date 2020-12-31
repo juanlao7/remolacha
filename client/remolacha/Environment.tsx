@@ -114,6 +114,7 @@ class EnvironmentComponent extends React.Component<EnvironmentComponentProps, En
     }
 
     removeWindow(window : Window) {
+        this.blurWindow(window);
         this.removeWindowImpl(this.state.windows, window);
         const index = this.removeWindowImpl(this.windowsByZIndex, window);
         this.fixZIndexes(index);
