@@ -31,6 +31,6 @@ export default class TaskbarAppInitializer {
             }))
         ]);
 
-        ReactDOM.render(<Taskbar />, content);
+        ReactDOM.render(<Taskbar appInstance={appInstance} />, content);
     }
 }

@@ -13,12 +13,14 @@ export default class AppInstance {
     private appManifest : AppManifest;
     private windows : Set<Window>;
     private exiting : boolean;
+    private running : boolean;
 
     constructor(id : number, appManifest : AppManifest) {
         this.id = id;
         this.appManifest = appManifest;
         this.windows = new Set<Window>();
         this.exiting = false;
+        this.running = true;
     }
 
     private onWindowDestroy(window : Window) {
@@ -47,8 +49,8 @@ export default class AppInstance {
         return new Set(this.windows);
     }
 
-    async callBackend(service : string, data : Blob) : Promise<object> {
-        return await Environment.getInstance().callBackend(this.appManifest.id, service, data);
+    async callBackend(service : string, init : RequestInit = null) : Promise<Response> {
+        return await Environment.getInstance().callBackend(this.appManifest.id, service, init);
     }
 
     async loadCSS(url : string) : Promise<void> {
@@ -79,6 +81,11 @@ export default class AppInstance {
             window.destroy();
         }
 
+        this.running = false;
         this.events.fire('exit');
+    }
+
+    isRunning() : boolean {
+        return this.running;
     }
 }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { AppBar, Toolbar, Box } from '@material-ui/core';
+import { ThemeProvider, AppBar, Toolbar } from '@material-ui/core';
 import StartButton from './StartButton';
 import ClockButton from './ClockButton';
 import TaskButton from './TaskButton';
@@ -7,6 +7,7 @@ import TaskButton from './TaskButton';
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
 interface TaskbarProps {
+    appInstance : any;
 }
 
 interface TaskbarState {
@@ -51,18 +52,20 @@ export default class Taskbar extends React.Component<TaskbarProps, TaskbarState>
 
     render() {
         return (
-            <AppBar position="static" className="remolacha_app_Taskbar_appBar">
-                <Toolbar variant="dense" disableGutters>
-                    <StartButton />
+            <ThemeProvider theme={remolacha.theme}>
+                <AppBar position="static" className="remolacha_app_Taskbar_appBar">
+                    <Toolbar variant="dense" disableGutters>
+                        <StartButton />
 
-                    <div className="remolacha_app_Taskbar_tasks">
-                        {this.state.windows.map(window => (
-                        <TaskButton key={'' + window.getId()} window={window} />))}
-                    </div>
+                        <div className="remolacha_app_Taskbar_tasks">
+                            {this.state.windows.map(window => (
+                            <TaskButton key={'' + window.getId()} window={window} />))}
+                        </div>
 
-                    <ClockButton />
-                </Toolbar>
-            </AppBar>
+                        <ClockButton appInstance={this.props.appInstance} />
+                    </Toolbar>
+                </AppBar>
+            </ThemeProvider>
         );
     }
 }

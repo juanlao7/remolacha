@@ -137,7 +137,13 @@ class EnvironmentComponent extends React.Component<EnvironmentComponentProps, En
         window.setState({focused: false});
 
         for (let i = this.windowsByZIndex.length - 1; i >= 0; --i) {
-            if (this.windowsByZIndex[i] != window && this.windowsByZIndex[i].getState().focusable) {
+            if (this.windowsByZIndex[i] == window) {
+                continue;
+            }
+
+            const iWindowState = this.windowsByZIndex[i].getState();
+
+            if (iWindowState.focusable && !iWindowState.minimized) {
                 this.setFocused(this.windowsByZIndex[i]);
                 this.lastFocusedWindow = this.windowsByZIndex[i];
                 return;
@@ -311,9 +317,8 @@ export default class Environment {
         this.appInitializers.set(appId, appInitializer);
     }
 
-    async callBackend(appId : string, service : string, data : Blob) : Promise<any> {
-        // TODO
-        return {};
+    async callBackend(appId : string, service : string, init : RequestInit = null) : Promise<Response> {
+        return await fetch(`apps/${appId}/${service}`, init);
     }
 
     async loadCSS(appInstance : AppInstance, url : string) : Promise<void> {

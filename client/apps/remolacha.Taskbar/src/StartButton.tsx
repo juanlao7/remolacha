@@ -8,13 +8,30 @@ interface StartButtonProps {
 }
 
 interface StartButtonState {
-    anchorElement : HTMLElement
+    anchorElement : HTMLElement;
 }
 
 export default class StartButton extends React.Component<StartButtonProps, StartButtonState> {
     constructor(props : StartButtonProps) {
         super(props);
         this.state = {anchorElement: null};
+    }
+
+    private closeMenu() {
+        this.setState({anchorElement: null});
+    }
+
+    private onButtonClick(e : React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+        this.setState({anchorElement: e.currentTarget});
+    }
+
+    private onMenuClose() {
+        this.closeMenu();
+    }
+
+    private onMenuItemClick(appId : string) {
+        remolacha.Environment.getInstance().openApp(appId);
+        this.closeMenu();
     }
 
     private renderMenuItem(manifest : any) : JSX.Element {
@@ -25,7 +42,7 @@ export default class StartButton extends React.Component<StartButtonProps, Start
         return (
             <MenuItem
                 className="remolacha_app_Taskbar_startMenuItem"
-                onClick={() => this.openApp(manifest.id)}
+                onClick={() => this.onMenuItemClick(manifest.id)}
             >
                 <ListItemIcon>
                     <remolacha.RemolachaIcon {...manifest.icon} />
@@ -36,22 +53,10 @@ export default class StartButton extends React.Component<StartButtonProps, Start
         );
     }
 
-    private openApp(appId : string) {
-        remolacha.Environment.getInstance().openApp(appId);
-        this.close();
-    }
-
-    private close() {
-        this.setState({anchorElement: null});
-    }
-
     render() {
         return (
             <div className="remolacha_app_Taskbar_startButton">
-                <Button
-                    onClick={(e) => this.setState({anchorElement: e.currentTarget})}
-                    color="inherit"
-                >
+                <Button color="inherit" onClick={e => this.onButtonClick(e)}>
                     <Icon dangerouslySetInnerHTML={{__html: remolachaIconCode}} />
                 </Button>
 
@@ -59,7 +64,7 @@ export default class StartButton extends React.Component<StartButtonProps, Start
                     anchorEl={this.state.anchorElement}
                     keepMounted
                     open={Boolean(this.state.anchorElement)}
-                    onClose={() => this.close()}
+                    onClose={() => this.onMenuClose()}
                 >
                     {remolacha.Environment.getInstance().getInstalledApps().map((x : any) => this.renderMenuItem(x))}
                 </Menu>
