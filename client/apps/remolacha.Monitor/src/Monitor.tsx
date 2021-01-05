@@ -1,6 +1,7 @@
 import React from 'react';
 import { ThemeProvider, AppBar, Tabs, Tab } from '@material-ui/core';
 import SwipeableViews from 'react-swipeable-views';
+import ProcessTable from './ProcessTable';
 import AppTable from './AppTable';
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
@@ -44,7 +45,7 @@ export default class Monitor extends React.Component<MonitorProps, MonitorState>
                     index={this.state.selectedTabIndex}
                     onChangeIndex={(x : number) => this.onTabChange(x)}
                 >
-                    <div>Processes</div>
+                    <ProcessTable />
                     <AppTable />
                 </SwipeableViews>
             </ThemeProvider>
