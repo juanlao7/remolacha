@@ -142,12 +142,12 @@ export default class ClockButton extends React.Component<ClockButtonProps, Clock
                     onClose={() => this.onMenuClose()}
                 >
                     <CardContent>
-                        <Typography variant="subtitle2">
-                            Server date and time
+                        <Typography variant="subtitle2" gutterBottom>
+                            Server time and date
                         </Typography>
 
-                        <Typography variant="h3">
-                            {serverDate.toFormat('hh:mm:ss a')}
+                        <Typography variant="h4">
+                            {serverDate.toFormat('h:mm:ss')} <Typography variant="h6" display="inline" color="textSecondary">{serverDate.toFormat('a')}</Typography>
                         </Typography>
 
                         <Typography variant="subtitle1">
