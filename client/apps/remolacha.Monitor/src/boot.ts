@@ -1,4 +1,4 @@
-import MonitorAppInitializer from './MonitorAppInitializer';
+import { MonitorAppInitializer } from './MonitorAppInitializer';
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 

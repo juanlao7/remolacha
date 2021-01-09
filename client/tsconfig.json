@@ -1,4 +1,5 @@
 {
+    "$schema": "https://json.schemastore.org/tsconfig",
     "compilerOptions": {
         "outDir": "./dist/",
         "target": "ES6",
@@ -17,7 +18,5 @@
         "declarationDir": "types",
         "noImplicitAny": true,
         "noImplicitThis": true
-    },
-    "$schema": "https://json.schemastore.org/tsconfig",
-    "display": "Recommended"
+    }
 }

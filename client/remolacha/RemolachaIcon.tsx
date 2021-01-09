@@ -1,11 +1,11 @@
 import React from 'react';
-import IconDefinition from './IconDefinition';
 import { Icon } from '@material-ui/core';
+import { IconDefinition } from './IconDefinition';
 
 interface RemolachaIconState {
 }
 
-export default class RemolachaIcon extends React.Component<IconDefinition, RemolachaIconState> {
+export class RemolachaIcon extends React.Component<IconDefinition, RemolachaIconState> {
     render() : JSX.Element {
         if (this.props == null) {
             return null;

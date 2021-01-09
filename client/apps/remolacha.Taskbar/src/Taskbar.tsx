@@ -1,8 +1,8 @@
 import React from 'react';
 import { ThemeProvider, AppBar, Toolbar } from '@material-ui/core';
-import StartButton from './StartButton';
-import ClockButton from './ClockButton';
-import TaskButton from './TaskButton';
+import { StartButton } from './StartButton';
+import { ClockButton } from './ClockButton';
+import { TaskButton } from './TaskButton';
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
@@ -14,7 +14,7 @@ interface TaskbarState {
     windows? : Array<any>      // TODO: use remolacha.Window
 }
 
-export default class Taskbar extends React.Component<TaskbarProps, TaskbarState> {
+export class Taskbar extends React.Component<TaskbarProps, TaskbarState> {
     constructor(props : TaskbarProps) {
         super(props);
 

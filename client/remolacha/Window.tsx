@@ -1,8 +1,8 @@
 import React from 'react';
-import { AppBar, Toolbar, Box, Typography, Button, Icon } from '@material-ui/core';
-import EventManager from './EventManager';
-import MaxInstancesReachedError from './MaxInstancesReachedError';
-import IconDefinition from './IconDefinition';
+import { AppBar, Toolbar, Typography, Button, Icon } from '@material-ui/core';
+import { EventManager } from 'remolacha-commons';
+import { MaxInstancesReachedError } from './MaxInstancesReachedError';
+import { IconDefinition } from './IconDefinition';
 import { clamp, generateClassName } from './utils';
 
 interface WindowComponentProps {
@@ -453,7 +453,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
     }
 }
 
-export default class Window {
+export class Window {
     static readonly MAX_INSTANCES = Number.MAX_SAFE_INTEGER;
 
     private static instances : Map<number, Window> = new Map<number, Window>();

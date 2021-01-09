@@ -1,2 +1,2 @@
-export default class PermissionDeniedError extends Error {
+export class PermissionDeniedError extends Error {
 }

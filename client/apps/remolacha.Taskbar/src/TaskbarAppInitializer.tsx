@@ -1,12 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Taskbar from './Taskbar';
+import { Taskbar } from './Taskbar';
 
 require('./assets/sass/index.sass');
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
-export default class TaskbarAppInitializer {
+export class TaskbarAppInitializer {
     async open(appInstance : any, initialize : boolean, params : Map<string, any>) : Promise<void> {
         if (!initialize) {
             return;

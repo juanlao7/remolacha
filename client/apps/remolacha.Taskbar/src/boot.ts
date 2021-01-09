@@ -1,4 +1,4 @@
-import TaskbarAppInitializer from './TaskbarAppInitializer';
+import { TaskbarAppInitializer } from './TaskbarAppInitializer';
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 

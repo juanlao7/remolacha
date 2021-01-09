@@ -1,6 +1,6 @@
-import IconDefinition from './IconDefinition';
+import { IconDefinition } from './IconDefinition';
 
-export default interface AppManifest {
+export interface AppManifest {
     id : string;
     name : string;
     isSingleton : boolean;

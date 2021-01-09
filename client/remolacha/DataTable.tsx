@@ -27,7 +27,7 @@ interface DataTableState {
     order? : Order;
 }
 
-export default class DataTable extends React.Component<DataTableProps, DataTableState> {
+export class DataTable extends React.Component<DataTableProps, DataTableState> {
     constructor(props : DataTableProps) {
         super(props);
 

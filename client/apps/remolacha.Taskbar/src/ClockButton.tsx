@@ -12,9 +12,7 @@ interface ClockButtonState {
     onTaskbarZone? : string;
 }
 
-export default class ClockButton extends React.Component<ClockButtonProps, ClockButtonState> {
-    private static readonly REMOTE_UPDATE_INTERVAL = 5000;
-
+export class ClockButton extends React.Component<ClockButtonProps, ClockButtonState> {
     private clientOffset : number;
     private utcOffset : number;
     private zone : string;
@@ -35,28 +33,6 @@ export default class ClockButton extends React.Component<ClockButtonProps, Clock
         this.setTimeInterval = null;
     }
 
-    private async updateTime() {
-        if (!this.props.appInstance.isRunning()) {
-            return;
-        }
-
-        const response : Response = await this.props.appInstance.callBackend('getCurrentTime');
-
-        if (response.ok) {
-            const responseJSON = await response.json();
-            this.clientOffset = responseJSON.timestamp - Date.now();
-            this.utcOffset = responseJSON.utcOffset;
-            this.zone = responseJSON.zone;
-
-            if (this.setTimeInterval == null) {
-                this.setTime();
-                this.setTimeInterval = setInterval(() => this.setTime(), 1000);
-            }
-
-            setTimeout(() => this.updateTime(), ClockButton.REMOTE_UPDATE_INTERVAL);
-        }
-    }
-
     private setTime() {
         if (!this.props.appInstance.isRunning()) {
             clearInterval(this.setTimeInterval);
@@ -71,14 +47,6 @@ export default class ClockButton extends React.Component<ClockButtonProps, Clock
     private getUTCOffsetAsString() {
         const offsetAsString = Duration.fromMillis(Math.abs(this.utcOffset)).toFormat('hh:mm');
         return `UTC${(this.utcOffset < 0) ? '-' : '+'}${offsetAsString}`;
-    }
-
-    private z(input : number) : string {
-        if (input >= 10) {
-            return '' + input;
-        }
-
-        return '0' + input;
     }
 
     private closeMenu() {
@@ -98,7 +66,20 @@ export default class ClockButton extends React.Component<ClockButtonProps, Clock
     }
 
     componentDidMount() {
-        this.updateTime().then()
+        const connection = this.props.appInstance.createBackendConnection('getCurrentTime', null);
+        
+        connection.events.on('dataReceive', (emitter : any, data : any) => {
+            this.clientOffset = data.timestamp - Date.now();
+            this.utcOffset = data.utcOffset;
+            this.zone = data.zone;
+
+            if (this.setTimeInterval == null) {
+                this.setTime();
+                this.setTimeInterval = setInterval(() => this.setTime(), 1000);
+            }
+        });
+
+        connection.open();
     }
 
     render() {

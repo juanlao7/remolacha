@@ -1,12 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import Monitor from './Monitor';
+import { Monitor } from './Monitor';
 
 require('./assets/sass/index.sass');
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
-export default class MonitorAppInitializer {
+export class MonitorAppInitializer {
     async open(appInstance : any, initialize : boolean, params : Map<string, any>) : Promise<void> {
         if (!initialize) {
             const window = Array.from<any>(appInstance.getWindows())[0];

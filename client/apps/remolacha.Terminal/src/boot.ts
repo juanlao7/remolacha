@@ -1,4 +1,4 @@
-import TerminalAppInitializer from './TerminalAppInitializer';
+import { TerminalAppInitializer } from './TerminalAppInitializer';
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 

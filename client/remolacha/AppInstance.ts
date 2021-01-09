@@ -1,10 +1,12 @@
-import Environment from './Environment';
-import AppManifest from './AppManifest';
-import Window from './Window';
-import EventManager from './EventManager';
-import PermissionDeniedError from './PermissionDeniedError';
+import { EventManager } from 'remolacha-commons';
+import { Environment } from './Environment';
+import { AppManifest } from './AppManifest';
+import { Window } from './Window';
+import { PermissionDeniedError } from './PermissionDeniedError';
+import { Backend } from './Backend';
+import { BackendConnection } from './BackendConnection';
 
-export default class AppInstance {
+export class AppInstance {
     private static readonly FIRST_INSTANCE_ID = 1;
 
     readonly events = new EventManager(this);
@@ -14,6 +16,7 @@ export default class AppInstance {
     private windows : Set<Window>;
     private exiting : boolean;
     private running : boolean;
+    private connections : Set<BackendConnection>;
 
     constructor(id : number, appManifest : AppManifest) {
         this.id = id;
@@ -21,6 +24,7 @@ export default class AppInstance {
         this.windows = new Set<Window>();
         this.exiting = false;
         this.running = true;
+        this.connections = new Set();
     }
 
     private onWindowDestroy(window : Window) {
@@ -49,8 +53,10 @@ export default class AppInstance {
         return new Set(this.windows);
     }
 
-    async callBackend(service : string, init : RequestInit = null) : Promise<Response> {
-        return await Environment.getInstance().callBackend(this.appManifest.id, service, init);
+    createBackendConnection(service : string, params : any) : BackendConnection {
+        const connection = Backend.getInstance().createConnection(this.appManifest.id, service, params);
+        this.connections.add(connection);
+        return connection;
     }
 
     async loadCSS(url : string) : Promise<void> {
@@ -76,6 +82,10 @@ export default class AppInstance {
         }
 
         this.exiting = true;
+
+        for (const connection of this.connections) {
+            connection.close();
+        }
 
         for (const window of this.windows) {
             window.destroy();

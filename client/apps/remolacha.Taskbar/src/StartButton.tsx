@@ -11,7 +11,7 @@ interface StartButtonState {
     anchorElement : HTMLElement;
 }
 
-export default class StartButton extends React.Component<StartButtonProps, StartButtonState> {
+export class StartButton extends React.Component<StartButtonProps, StartButtonState> {
     constructor(props : StartButtonProps) {
         super(props);
         this.state = {anchorElement: null};

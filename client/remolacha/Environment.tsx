@@ -1,16 +1,16 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
-import AppManifest from './AppManifest';
-import AppInstance from './AppInstance';
-import AppInitializer from './AppInitializer';
-import Window from './Window';
-import AppNotFoundError from './AppNotFoundError';
-import MaxInstancesReachedError from './MaxInstancesReachedError';
-import UndefinedAppInitializerError from './UndefinedAppInitializerError';
-import manifestsJSON from '../apps/manifests.json';
-import EventManager from './EventManager';
-import theme from './theme';
 import { ThemeProvider } from '@material-ui/core';
+import { EventManager } from 'remolacha-commons';
+import { AppManifest } from './AppManifest';
+import { AppInstance } from './AppInstance';
+import { AppInitializer } from './AppInitializer';
+import { Window } from './Window';
+import { AppNotFoundError } from './AppNotFoundError';
+import { MaxInstancesReachedError } from './MaxInstancesReachedError';
+import { UndefinedAppInitializerError } from './UndefinedAppInitializerError';
+import { theme } from './theme';
+import manifestsJSON from '../apps/manifests.json';
 
 interface EnvironmentComponentProps {
 }
@@ -164,7 +164,7 @@ class EnvironmentComponent extends React.Component<EnvironmentComponentProps, En
     }
 }
 
-export default class Environment {
+export class Environment {
     static readonly MAX_APP_INSTANCES = Number.MAX_SAFE_INTEGER;
 
     readonly events = new EventManager(this);
@@ -188,7 +188,7 @@ export default class Environment {
         this.appInitializers = new Map<string, AppInitializer>();
         this.loadedCSS = new Map<string, [HTMLElement, Set<AppInstance>]>();
         this.loadedJS = new Set<string>();
-
+ 
         ReactDOM.render(<EnvironmentComponent ref={x => this.environmentComponent = x} />, document.body);
     }
 
@@ -315,10 +315,6 @@ export default class Environment {
 
     setAppInitializer(appId : string, appInitializer : AppInitializer) {
         this.appInitializers.set(appId, appInitializer);
-    }
-
-    async callBackend(appId : string, service : string, init : RequestInit = null) : Promise<Response> {
-        return await fetch(`apps/${appId}/${service}`, init);
     }
 
     async loadCSS(appInstance : AppInstance, url : string) : Promise<void> {

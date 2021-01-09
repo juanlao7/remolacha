@@ -1,0 +1,22 @@
+{
+  "name": "remolacha-commons",
+  "version": "1.0.0",
+  "description": "Remolacha common components",
+  "private": true,
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "files": [
+    "dist/**/*"
+  ],
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "tsc",
+    "prepare": "npm run build"
+  },
+  "author": "Juan Lao Tebar",
+  "license": "SEE LICENSE IN LICENSE.txt",
+  "devDependencies": {
+    "@types/node": "^14.14.20",
+    "typescript": "^4.1.3"
+  }
+}

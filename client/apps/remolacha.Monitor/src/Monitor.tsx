@@ -1,8 +1,8 @@
 import React from 'react';
 import { ThemeProvider, AppBar, Tabs, Tab } from '@material-ui/core';
 import SwipeableViews from 'react-swipeable-views';
-import ProcessTable from './ProcessTable';
-import AppTable from './AppTable';
+import { ProcessTable } from './ProcessTable';
+import { AppTable } from './AppTable';
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
@@ -14,7 +14,7 @@ interface MonitorState {
     selectedTabIndex? : number;
 }
 
-export default class Monitor extends React.Component<MonitorProps, MonitorState> {
+export class Monitor extends React.Component<MonitorProps, MonitorState> {
     constructor(props: MonitorProps) {
         super(props);
         this.state = {selectedTabIndex: 0};

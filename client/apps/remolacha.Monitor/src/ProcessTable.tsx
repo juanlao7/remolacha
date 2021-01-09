@@ -12,7 +12,7 @@ interface ProcessTableState {
     error? : Error
 }
 
-export default class ProcessTable extends React.Component<ProcessTableProps, ProcessTableState> {
+export class ProcessTable extends React.Component<ProcessTableProps, ProcessTableState> {
     private static readonly COLUMNS : Array<any> = [
         {
             id: 'selected',

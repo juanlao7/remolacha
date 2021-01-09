@@ -10,7 +10,7 @@ interface TaskButtonProps {
 interface TaskButtonState {
 }
 
-export default class TaskButton extends React.Component<TaskButtonProps, TaskButtonState> {
+export class TaskButton extends React.Component<TaskButtonProps, TaskButtonState> {
     constructor(props : TaskButtonProps) {
         super(props);
 

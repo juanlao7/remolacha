@@ -12,7 +12,7 @@ interface AppTableState {
     error? : Error
 }
 
-export default class AppTable extends React.Component<AppTableProps, AppTableState> {
+export class AppTable extends React.Component<AppTableProps, AppTableState> {
     private static readonly COLUMNS : Array<any> = [
         {
             id: 'selected',
