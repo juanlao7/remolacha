@@ -7,7 +7,8 @@ import { AppTable } from './AppTable';
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
 interface MonitorProps {
-    window: any;        // TODO: type remolacha.Window
+    appInstance : any;
+    window : any;        // TODO: type remolacha.Window
 }
 
 interface MonitorState {
@@ -45,7 +46,7 @@ export class Monitor extends React.Component<MonitorProps, MonitorState> {
                     index={this.state.selectedTabIndex}
                     onChangeIndex={(x : number) => this.onTabChange(x)}
                 >
-                    <ProcessTable />
+                    <ProcessTable appInstance={this.props.appInstance} />
                     <AppTable />
                 </SwipeableViews>
             </ThemeProvider>

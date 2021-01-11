@@ -44,6 +44,8 @@ export class BackendConnection {
             service: this.service,
             params: this.params
         });
+
+        this.state = BackendConnectionState.OPEN;
     }
 
     close() {
@@ -58,5 +60,7 @@ export class BackendConnection {
             action: 'close',
             connectionId: this.connectionId
         });
+
+        this.state = BackendConnectionState.CLOSED;
     }
 }

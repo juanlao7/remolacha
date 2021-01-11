@@ -1,30 +1,36 @@
 import React from 'react';
-import { AppBar, Button, Toolbar, Typography, Checkbox } from '@material-ui/core';
+import { AppBar, Button, Toolbar, Typography, Checkbox, LinearProgress } from '@material-ui/core';
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
+enum KillingState {
+    NOT_KILLING,
+    KILLING,
+    FINISHED_KILLING
+}
+
 interface ProcessTableProps {
+    appInstance : any;
 }
 
 interface ProcessTableState {
+    columns? : Array<any>;
     processes? : Array<Array<any>>;
     selected? : Set<number>;
-    error? : Error
+    error? : Error,
+    killingState? : KillingState
 }
 
 export class ProcessTable extends React.Component<ProcessTableProps, ProcessTableState> {
+    private static readonly SELECTED_COLUMN : any = {
+        id: 'selected',
+        content: null
+    };
+
     private static readonly COLUMNS : Array<any> = [
         {
-            id: 'selected',
-            content: null
-        },
-        {
-            id: 'command',
-            content: 'Command'
-        },
-        {
-            id: 'user',
-            content: 'User'
+            id: 'name',
+            content: 'Name'
         },
         {
             id: 'cpu',
@@ -44,9 +50,11 @@ export class ProcessTable extends React.Component<ProcessTableProps, ProcessTabl
         super(props);
         
         this.state = {
+            columns: [],
             processes: [],
             selected: new Set(),
-            error: null
+            error: null,
+            killingState: KillingState.NOT_KILLING
         };
     }
 
@@ -68,18 +76,69 @@ export class ProcessTable extends React.Component<ProcessTableProps, ProcessTabl
     }
 
     private onKillClick() {
-        let error : Error = null;
+        this.setState({killingState: KillingState.KILLING});
+        const connection = this.props.appInstance.createBackendConnection('killProcesses', {pids: [...this.state.selected]});
 
-        for (const pid of this.state.selected) {
-            try {
-                // TODO
-            }
-            catch (e) {
-                error = e;
-            }
-        }
+        connection.events.on('dataReceive', (emitter : any, data : any) => {
+            const newState : ProcessTableState = {killingState: KillingState.FINISHED_KILLING};
 
-        this.setState({error: error});
+            if (data.status == 'error') {
+                newState.error = data.error;
+            }
+
+            this.setState(newState);
+            connection.close();
+        });
+
+        connection.open();
+    }
+
+    componentDidMount() {
+        const connection = this.props.appInstance.createBackendConnection('getProcesses', null);
+        
+        connection.events.on('dataReceive', (emitter : any, data : any) => {
+            const pids = new Set<number>();
+            const columns = [ProcessTable.SELECTED_COLUMN];
+
+            for (const column of ProcessTable.COLUMNS) {
+                if (column.id in data) {
+                    columns.push(column);
+                }
+            }
+
+            const processes = [];
+
+            for (let i = 0; i < data['pid'].length; ++i) {
+                pids.add(data['pid'][i]);
+                const process = [];
+
+                for (let j = 1; j < columns.length; ++j) {
+                    process.push(data[columns[j].id][i]);
+                }
+
+                processes.push(process);
+            }
+
+            const newState : ProcessTableState = {
+                columns: columns,
+                processes: processes
+            };
+
+            for (const selectedPID of this.state.selected) {
+                if (!pids.has(selectedPID)) {
+                    this.state.selected.delete(selectedPID);
+                    newState.selected = this.state.selected;
+                }
+            }
+
+            if (this.state.killingState == KillingState.FINISHED_KILLING) {
+                newState.killingState = KillingState.NOT_KILLING;
+            }
+
+            this.setState(newState);
+        });
+
+        connection.open();
     }
 
     private renderRow(process : Array<any>) {
@@ -92,7 +151,7 @@ export class ProcessTable extends React.Component<ProcessTableProps, ProcessTabl
         return (
             <div className="remolacha_app_Monitor_tableWithFooter">
                 <remolacha.DataTable
-                    columns={ProcessTable.COLUMNS}
+                    columns={this.state.columns}
                     rows={this.state.processes.map(process => this.renderRow(process))}
                     size="small"
                     rowKey={(rowIndex : number) => this.state.processes[rowIndex][this.state.processes[rowIndex].length - 1]}
@@ -103,22 +162,29 @@ export class ProcessTable extends React.Component<ProcessTableProps, ProcessTabl
                 <AppBar position="static">
                     <Toolbar variant="dense">
                         <Typography variant="body1" color="inherit">
-                            {(this.state.error == null) ?
-                                (this.state.selected.size == 0) ?
-                                    'Processes running on server-side'
-                                :
-                                    `${this.state.selected.size} process${(this.state.selected.size == 1) ? '' : 'es'} selected`
+                            {(this.state.killingState != KillingState.NOT_KILLING) ?
+                                `Killing ${this.state.selected.size} process${(this.state.selected.size == 1) ? '' : 'es'}...`
                             :
-                                this.state.error.message}
+                                (this.state.error == null) ?
+                                    (this.state.selected.size == 0) ?
+                                        'Processes running on server-side'
+                                    :
+                                        `${this.state.selected.size} process${(this.state.selected.size == 1) ? '' : 'es'} selected`
+                                :
+                                    this.state.error.message}
                         </Typography>
 
-                        {this.state.selected.size > 0 &&
+                        {(this.state.selected.size > 0 && this.state.killingState == KillingState.NOT_KILLING) &&
                         <Button
                             variant="outlined"
                             color="inherit"
                             onClick={() => this.onKillClick()}
                         >Kill</Button>}
                     </Toolbar>
+
+                    {this.state.killingState != KillingState.NOT_KILLING &&
+                    <LinearProgress className="remolacha_app_Monitor_progressBar" color="secondary" />
+                    }
                 </AppBar>
             </div>
         );

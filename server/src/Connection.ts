@@ -14,7 +14,7 @@ export class Connection {
         this.session = session;
         this.closed = false;
 
-        this.onSessionMessageListenerId = this.session.events.on('message', message => {
+        this.onSessionMessageListenerId = this.session.events.on('message', (emitter, message) => {
             if (message.connectionId != this.id) {
                 return;
             }

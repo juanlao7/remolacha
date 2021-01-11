@@ -3,7 +3,7 @@ import { Button, CircularProgress, Menu, Typography, CardContent, FormControl, R
 import { DateTime, Duration } from 'luxon';
 
 interface ClockButtonProps {
-    appInstance? : any;
+    appInstance : any;
 }
 
 interface ClockButtonState {

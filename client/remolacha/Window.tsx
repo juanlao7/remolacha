@@ -33,6 +33,7 @@ interface WindowComponentState {
     focused? : boolean;
     alwaysOnTop? : boolean;
     zIndex? : number;
+    className? : string;
 }
 
 class WindowComponent extends React.Component<WindowComponentProps, WindowComponentState> {
@@ -64,7 +65,8 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
         focusable: true,
         focused: false,
         alwaysOnTop: false,
-        zIndex: 0
+        zIndex: 0,
+        className: null
     };
 
     private anchorUpdate : (newMouseX : number, newMouseY : number) => void;
@@ -393,14 +395,20 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
             }
         }
 
-        const windowClasses = generateClassName({
+        const windowClassesMask : any = {
             remolacha_Window: true,
             remolacha_Window_showFrame: this.state.showFrame,
             remolacha_Window_minimized: this.state.minimized,
             remolacha_Window_maximized: this.state.maximized,
             remolacha_Window_focused: this.state.focused,
             remolacha_Window_alwaysOnTop: this.state.alwaysOnTop
-        });
+        };
+
+        if (this.state.className != null) {
+            windowClassesMask[this.state.className] = true;
+        }
+
+        const windowClasses = generateClassName(windowClassesMask);
 
         return (
             <div

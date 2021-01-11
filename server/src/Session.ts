@@ -17,7 +17,7 @@ export class Session {
     private onMessage(message : WebSocket.Data) {
         try {
             const messageJSON = JSON.parse(message.toString());
-        
+            
             if (messageJSON.action == 'open') {
                 this.onOpenMessage(messageJSON);
             }

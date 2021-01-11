@@ -26,7 +26,8 @@ export class MonitorAppInitializer {
                 id: 'query_stats'
             },
             width: 481,
-            height: 645
+            height: 645,
+            className: 'remolacha_app_Monitor_window'
         });
 
         window.events.on('destroy', () => appInstance.exit());
@@ -36,6 +37,6 @@ export class MonitorAppInitializer {
             appInstance.addWindow(window)
         ]);
 
-        ReactDOM.render(<Monitor window={window} />, content);
+        ReactDOM.render(<Monitor appInstance={appInstance} window={window} />, content);
     }
 }

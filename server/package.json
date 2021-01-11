@@ -24,7 +24,9 @@
     "argparse": "^2.0.1",
     "errorhandler": "^1.5.1",
     "express": "^4.17.1",
-    "ws": "^7.4.2",
-    "remolacha-commons": "file:../commons/remolacha-commons-1.0.0.tgz"
+    "fkill": "^7.1.0",
+    "ps-list": "^7.2.0",
+    "remolacha-commons": "file:../commons/remolacha-commons-1.0.0.tgz",
+    "ws": "^7.4.2"
   }
 }
