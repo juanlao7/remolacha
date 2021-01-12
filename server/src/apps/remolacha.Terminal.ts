@@ -1,3 +1,4 @@
+import fkill from 'fkill';
 import os from 'os';
 import { App } from '../App';
 import { Connection } from '../Connection';
@@ -30,9 +31,8 @@ const app : App = {
         });
 
         term.onData((data : string) => connection.send(data));
-        term.onExit(() => connection.close());
 
-        const onDataReceiveListenerId = connection.events.on('dataReceive', (emitter, data) => {
+        const onConnectionDataReceiveListenerId = connection.events.on('dataReceive', (emitter, data) => {
             if (typeof data != 'object') {
                 return;
             }
@@ -47,9 +47,14 @@ const app : App = {
             }
         });
 
-        connection.events.once('close', () => {
-            connection.events.detach(onDataReceiveListenerId);
-            term.kill();
+        const onConnectionCloseListenerId = connection.events.once('close', () => {
+            connection.events.detach(onConnectionDataReceiveListenerId);
+            fkill(term.pid, {'force': true, 'tree': true});         // term.kill() makes node freeze on Windows.
+        });
+
+        term.onExit(() => {
+            connection.events.detach(onConnectionCloseListenerId);
+            connection.close();
         });
     }
 };

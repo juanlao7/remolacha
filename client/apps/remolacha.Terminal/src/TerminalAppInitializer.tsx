@@ -29,7 +29,11 @@ export class TerminalAppInitializer {
             appInstance.addWindow(window)
         ]);
         
-        const term = new Terminal({fontFamily: 'Roboto Mono'});
+        const term = new Terminal({
+            fontFamily: 'Roboto Mono',
+            fontSize: 14
+        });
+        
         const fitAddon = new FitAddon();
         term.loadAddon(fitAddon);
         term.loadAddon(new XtermWebfont());
@@ -37,6 +41,7 @@ export class TerminalAppInitializer {
 
         fitAddon.fit();
         window.events.on('resize', () => fitAddon.fit());
+        window.events.on('focus', () => term.focus());
 
         const connection = appInstance.createBackendConnection('shell', {
             columns: term.cols,
