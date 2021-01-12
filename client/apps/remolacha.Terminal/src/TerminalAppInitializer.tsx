@@ -1,6 +1,8 @@
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 
+const XtermWebfont = require('xterm-webfont');
+
 require('./assets/sass/index.sass');
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
@@ -27,38 +29,35 @@ export class TerminalAppInitializer {
             appInstance.addWindow(window)
         ]);
         
-        const term = new Terminal();
+        const term = new Terminal({fontFamily: 'Roboto Mono'});
         const fitAddon = new FitAddon();
         term.loadAddon(fitAddon);
-        term.open(content);
+        term.loadAddon(new XtermWebfont());
+        await (term as any).loadWebfontAndOpen(content);
+
         fitAddon.fit();
         window.events.on('resize', () => fitAddon.fit());
 
-        term.writeln('Welcome to xterm.js');
-        term.writeln('This is a local terminal emulation, without a real terminal in the back-end.');
-        term.writeln('Type some keys and commands to play around.');
-        term.writeln('');
-        this.prompt(term);
-
-        term.onData(e => {
-            switch (e) {
-                case '\r': // Enter
-                case '\u0003': // Ctrl+C
-                this.prompt(term);
-                break;
-            case '\u007F': // Backspace (DEL)
-                // Do not delete the prompt
-                if ((term as any)._core.buffer.x > 2) {
-                    term.write('\b \b');
-                }
-                break;
-            default: // Print all other characters for demo
-                term.write(e);
-            }
+        const connection = appInstance.createBackendConnection('shell', {
+            columns: term.cols,
+            rows: term.rows
         });
-    }
 
-    prompt(term : Terminal) {
-        term.write('\r\n$ ');
+        connection.events.on('dataReceive', (emitter : any, data : any) => term.write(data));
+        connection.events.once('close', () => window.destroy());
+
+        term.onData(data => connection.send({
+            type: 'content',
+            content: data
+        }));
+
+        term.onResize(size => connection.send({
+            type: 'size',
+            columns: size.cols,
+            rows: size.rows
+        }));
+
+        connection.open();
+        term.focus();
     }
 }

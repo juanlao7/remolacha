@@ -32,13 +32,24 @@ export class Connection {
 
     send(data : any) {
         if (this.closed) {
-            throw new Error(`Connection with ID "${this.id}" is not active anymore.`);
+            return;
         }
 
         this.session.send({
             action: 'data',
             connectionId: this.id,
             data: data
+        });
+    }
+
+    close() {
+        if (this.closed) {
+            return;
+        }
+
+        this.session.send({
+            action: 'close',
+            connectionId: this.id
         });
     }
 }

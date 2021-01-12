@@ -28,8 +28,22 @@ export class BackendConnection {
 
     private onBackendSocketMessage(message : any) {
         if (message.connectionId == this.connectionId) {
-            this.events.fire('dataReceive', message.data);
+            if (message.action == 'close') {
+                this.finallyClose();
+            }
+            else if (message.action == 'data') {
+                this.events.fire('dataReceive', message.data);
+            }
         }
+    }
+
+    private finallyClose() {
+        if (this.state != BackendConnectionState.OPEN) {
+            return;
+        }
+
+        this.state = BackendConnectionState.CLOSED;
+        this.events.fire('close');
     }
 
     open() {
@@ -61,6 +75,18 @@ export class BackendConnection {
             connectionId: this.connectionId
         });
 
-        this.state = BackendConnectionState.CLOSED;
+        this.finallyClose();
+    }
+
+    send(data : any) {
+        if (this.state != BackendConnectionState.OPEN) {
+            throw new Error('Connection is not open.');
+        }
+
+        Backend.getInstance().sendMessage({
+            action: 'data',
+            connectionId: this.connectionId,
+            data: data
+        });
     }
 }

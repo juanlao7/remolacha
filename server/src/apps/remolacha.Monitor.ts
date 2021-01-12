@@ -44,6 +44,9 @@ const app : App = {
                 error: e.message
             });
         }
+        finally {
+            connection.close();
+        }
     }
 };
 
