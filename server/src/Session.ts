@@ -15,8 +15,6 @@ export class Session {
     }
 
     private onMessage(message : WebSocket.Data) {
-        console.log(message);
-        
         try {
             const messageJSON = JSON.parse(message.toString());
             
