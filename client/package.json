@@ -10,7 +10,7 @@
     "download-material-ui": "path-exists libs/material-ui.production.min.js || download \"https://unpkg.com/@material-ui/core@4/umd/material-ui.production.min.js\" -o libs",
     "prebuild": "npm run download-react && npm run download-react-dom && npm run download-material-ui",
     "build": "webpack && npm run build-apps",
-    "postbuild": "cpx dist/**/* ../server/dist/public",
+    "postbuild": "cpx 'dist/**/*' '../server/dist/public'",
     "build-apps": "foreach \"apps/*/webpack.config.js\" \"webpack --config #{path}\""
   },
   "author": "Juan Lao Tebar",
