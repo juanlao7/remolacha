@@ -14,7 +14,7 @@
     "build-apps": "foreach \"apps/*/webpack.config.js\" \"webpack --config #{path}\""
   },
   "author": "Juan Lao Tebar",
-  "license": "SEE LICENSE IN LICENSE.txt",
+  "license": "SEE LICENSE IN ../LICENSE",
   "devDependencies": {
     "@material-ui/core": "^4.11.2",
     "@types/luxon": "^1.25.0",

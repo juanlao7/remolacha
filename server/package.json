@@ -6,11 +6,11 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "build": "tsc",
-    "start": "npm run build && node dist/index.js",
+    "start": "node dist/index.js",
     "start-dev": "nodemon dist/index.js"
   },
   "author": "Juan Lao Tebar",
-  "license": "SEE LICENSE IN LICENSE.txt",
+  "license": "SEE LICENSE IN ../LICENSE",
   "devDependencies": {
     "@types/argparse": "^2.0.5",
     "@types/errorhandler": "^1.5.0",
