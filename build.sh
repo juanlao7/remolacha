@@ -5,14 +5,14 @@ set -o pipefail
 echo
 echo BUILDING COMMONS
 echo
-sh build-commons.sh
+bash build-commons.sh
 
 echo
 echo BUILDING CLIENT
 echo
-sh build-client.sh
+bash build-client.sh
 
 echo
 echo BUILDING SERVER
 echo
-sh build-server.sh
+bash build-server.sh
