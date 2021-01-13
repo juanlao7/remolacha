@@ -4,7 +4,7 @@
 
 The goal of this project is to offer a graphical environment and a small set of applications for administrating remote servers easily (terminal, file manager, text editor, etc).
 
-The advantage of this in front of VNC or remote X is that the server load is almost non-existent, as applications run on Javascript---on the client side---and only call certain microservices when necessary.
+The advantage of this in front of VNC or remote X is that the server load is almost non-existent, as applications run on Javascript—on the client side—and only call certain microservices when necessary.
 
 [![Preview](preview.png)](preview.png){:target="_blank"}
 
