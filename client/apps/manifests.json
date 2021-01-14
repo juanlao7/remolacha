@@ -14,6 +14,16 @@
 		"icon": null
 	},
 	{
+		"id": "remolacha.Files",
+		"name": "Files",
+		"isSingleton": false,
+		"showInAppsMenu": true,
+		"icon": {
+			"type": "material-icon",
+			"id": "folder"
+		}
+	},
+	{
 		"id": "remolacha.Taskbar",
 		"name": "Taskbar",
 		"isSingleton": true,
