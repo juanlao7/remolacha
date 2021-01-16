@@ -48,7 +48,7 @@ export class TerminalAppInitializer {
             rows: term.rows
         });
 
-        connection.events.on('dataReceive', (emitter : any, data : any) => term.write(data));
+        connection.events.on('data', (emitter : any, data : any) => term.write(data));
         connection.events.once('close', () => window.destroy());
 
         term.onData(data => connection.send({

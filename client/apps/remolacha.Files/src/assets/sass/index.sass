@@ -1,3 +1,6 @@
+.remolacha_app_Files .remolacha_Window_content
+    border-bottom: none !important
+    
 .remolacha_app_Files
     height: 100%
     display: flex
@@ -16,3 +19,22 @@
 
             &:hover
                 background-color: rgba(#fff, 0.25)
+
+    .remolacha_app_Files_fileList
+        flex-grow: 1
+
+        .material-icons
+            vertical-align: middle
+            margin-right: 8px
+
+            &.f
+                color: #aaa
+
+    .remolacha_app_Files_statusBar p
+        pointer-events: none
+        min-width: 0
+        flex-grow: 1
+        user-select: none
+        white-space: nowrap
+        overflow: hidden
+        text-overflow: ellipsis

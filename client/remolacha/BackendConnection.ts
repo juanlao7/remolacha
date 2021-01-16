@@ -32,7 +32,10 @@ export class BackendConnection {
                 this.finallyClose();
             }
             else if (message.action == 'data') {
-                this.events.fire('dataReceive', message.data);
+                this.events.fire('data', message.data);
+            }
+            else if (message.action == 'error') {
+                this.events.fire('error', message.error);
             }
         }
     }

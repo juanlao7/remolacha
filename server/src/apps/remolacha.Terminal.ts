@@ -32,7 +32,7 @@ const app : App = {
 
         term.onData((data : string) => connection.send(data));
 
-        const onConnectionDataReceiveListenerId = connection.events.on('dataReceive', (emitter, data) => {
+        const onConnectionDataListenerId = connection.events.on('data', (emitter, data) => {
             if (typeof data != 'object') {
                 return;
             }
@@ -48,7 +48,7 @@ const app : App = {
         });
 
         const onConnectionCloseListenerId = connection.events.once('close', () => {
-            connection.events.detach(onConnectionDataReceiveListenerId);
+            connection.events.detach(onConnectionDataListenerId);
             fkill(term.pid, {'force': true, 'tree': true});         // term.kill() makes node freeze on Windows.
         });
 

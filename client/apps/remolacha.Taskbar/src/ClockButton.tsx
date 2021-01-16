@@ -68,7 +68,7 @@ export class ClockButton extends React.Component<ClockButtonProps, ClockButtonSt
     componentDidMount() {
         const connection = this.props.appInstance.createBackendConnection('getCurrentTime', null);
         
-        connection.events.on('dataReceive', (emitter : any, data : any) => {
+        connection.events.on('data', (emitter : any, data : any) => {
             this.clientOffset = data.timestamp - Date.now();
             this.utcOffset = data.utcOffset;
             this.zone = data.zone;

@@ -20,7 +20,7 @@ export class Connection {
             }
 
             if (message.action == 'data') {
-                this.events.fire('dataReceive', message.data);
+                this.events.fire('data', message.data);
             }
             else if (message.action == 'close') {
                 this.closed = true;
@@ -39,6 +39,18 @@ export class Connection {
             action: 'data',
             connectionId: this.id,
             data: data
+        });
+    }
+
+    fail(error : any) {
+        if (this.closed) {
+            return;
+        }
+
+        this.session.send({
+            action: 'error',
+            connectionId: this.id,
+            error: error
         });
     }
 

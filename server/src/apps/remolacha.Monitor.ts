@@ -36,13 +36,9 @@ const app : App = {
             }
 
             await fkill(params.pids, {force: true});
-            connection.send({status: 'ok'});
         }
         catch (e) {
-            connection.send({
-                status: 'error',
-                error: e.message
-            });
+            connection.fail(e.message);
         }
         finally {
             connection.close();

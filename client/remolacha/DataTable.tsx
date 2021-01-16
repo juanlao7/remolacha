@@ -15,6 +15,7 @@ interface Column {
 interface DataTableProps {
     columns : Array<Column>;
     rows : Array<Array<any>>;
+    className? : string;
     size? : Size;
     padding? : Padding;
     rowKey? : (rowIndex : number) => string
@@ -90,7 +91,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
     render() {
         return (
-            <TableContainer>
+            <TableContainer className={this.props.className}>
                 <Table size={this.props.size} padding={this.props.padding}>
                     <TableHead>
                         <TableRow>
