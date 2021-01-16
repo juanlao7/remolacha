@@ -1,4 +1,5 @@
 import fs from 'fs-extra';
+import { connect } from 'http2';
 import path from 'path';
 import { promisify } from 'util';
 import { App } from '../App';
@@ -60,12 +61,25 @@ const app : App = {
             }
 
             const directoryPath = path.resolve(params.path);
-            const elements = await readDirectoryImpl(directoryPath);
+            let elements : Array<DirectoryElement> = [];
+            let error : string = null;
+
+            try {
+                elements = await readDirectoryImpl(directoryPath);
+            }
+            catch (e) {
+                // We want to send the error, but also update the UI with the resolved path.
+                error = e.message;
+            }
             
             connection.send({
                 path: directoryPath,
                 elements: elements
             });
+
+            if (error != null) {
+                connection.fail(error);
+            }
 
             // TODO: check changes
         }

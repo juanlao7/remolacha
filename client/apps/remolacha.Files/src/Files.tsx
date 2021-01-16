@@ -9,10 +9,13 @@ interface FilesProps {
 }
 
 interface FilesState {
+    currentPath? : string;
     locationInputValue? : string;
-    elements? : Array<any>,
+    elements? : Array<any>;
     selected? : Set<string>;
-    error? : any
+    previousPaths? : Array<string>;
+    nextPaths? : Array<string>;
+    error? : any;
 }
 
 export class Files extends React.Component<FilesProps, FilesState> {
@@ -32,26 +35,53 @@ export class Files extends React.Component<FilesProps, FilesState> {
     ];
 
     private connection : any;
-    private currentPath : string;
 
     constructor(props: FilesProps) {
         super(props);
         this.connection = null;
 
         this.state = {
+            currentPath: null,
             locationInputValue: '.',
             elements: [],
             selected: new Set(),
+            previousPaths: [],
+            nextPaths: [],
             error: null
         };
     }
 
-    private readDirectory(directoryPath : string, input : HTMLInputElement = null) {
-        this.currentPath = directoryPath;
+    private splitPath(absolutePath : string) : [Array<string>, string] {
+        let separator = null;
 
+        for (const character of absolutePath) {
+            if (character == '/' || character == '\\') {
+                separator = character;
+                break;
+            }
+        }
+
+        return [absolutePath.split(separator), separator];
+    }
+
+    private readDirectory(directoryPath : string, deleteNextPaths : boolean, input : HTMLInputElement = null) {
         if (this.connection != null) {
             this.connection.close();
         }
+
+        const newState : FilesState = {
+            currentPath: null,
+            locationInputValue: directoryPath,
+            elements: [],
+            selected: new Set(),
+            error: null
+        };
+
+        if (deleteNextPaths) {
+            newState.nextPaths = [];
+        }
+
+        this.setState(newState);
 
         const connection = this.props.appInstance.createBackendConnection('readDirectory', {path: directoryPath});
 
@@ -60,11 +90,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
                 input.select();
             }
 
-            this.setState({
-                elements: [],
-                selected: new Set(),
-                error: error
-            });
+            this.setState({error: error});
         });
 
         connection.events.on('data', (emitter : any, data : any) => {
@@ -72,21 +98,24 @@ export class Files extends React.Component<FilesProps, FilesState> {
                 input.blur();
             }
 
-            this.currentPath = data.path;
-
-            this.setState({
+            const newState : FilesState = {
+                currentPath: data.path,
                 locationInputValue: data.path,
                 elements: data.elements,
-                selected: new Set(),
                 error: null
-            });
+            };
 
-            let parts = data.path.split('/');
-            parts = parts[parts.length - 1].split('\\');
+            if (this.state.previousPaths.length == 0 || this.state.previousPaths[this.state.previousPaths.length - 1] != data.path) {
+                this.state.previousPaths.push(data.path);
+                newState.previousPaths = this.state.previousPaths;
+            }
+
+            this.setState(newState);
+            const [parts] = this.splitPath(data.path);
             let title = parts[parts.length - 1];
 
             if (title.length == 0) {
-                // This happens on Windows, when the path is "X:\".
+                // This happens on the root, when the path is "/" or "X:\".
                 title = data.path;
             }
 
@@ -94,6 +123,23 @@ export class Files extends React.Component<FilesProps, FilesState> {
         });
 
         connection.open();
+    }
+
+    private canGoBack() : boolean {
+        return (this.state.currentPath != null && this.state.previousPaths.length > 1);
+    }
+
+    private canGoForward() : boolean {
+        return (this.state.currentPath != null && this.state.nextPaths.length > 0);
+    }
+
+    private canGoUp() : boolean {
+        if (this.state.currentPath == null) {
+            return false;
+        }
+
+        const [parts] = this.splitPath(this.state.currentPath);
+        return (parts[parts.length - 1].length > 0);
     }
 
     private onRowClick(rowIndex : number) {
@@ -111,28 +157,55 @@ export class Files extends React.Component<FilesProps, FilesState> {
 
     private onRowDoubleClick(rowIndex : number) {
         if (this.state.elements[rowIndex].type == 'd') {
-            this.readDirectory(`${this.currentPath}/${this.state.elements[rowIndex].name}`);
+            const [parts, separator] = this.splitPath(this.state.currentPath);
+
+            if (parts[parts.length - 1].length == 0) {
+                // This happens only when the current path is the root ("/" or "X:\").
+                parts[parts.length - 1] = this.state.elements[rowIndex].name;
+            }
+            else {
+                parts.push(this.state.elements[rowIndex].name);
+            }
+
+            this.readDirectory(parts.join(separator), true);
         }
     }
 
     private onLocationInputChange(e : React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
         this.setState({locationInputValue: e.target.value});
-        //this.readDirectory(e.target.value);
     }
 
     private onLocationInputBlur() {
-        this.setState({locationInputValue: this.currentPath});
+        if (this.state.currentPath != null) {
+            this.setState({locationInputValue: this.state.currentPath});
+        }
     }
 
     private onLocationInputKeyPress(e : React.KeyboardEvent<HTMLDivElement>) {
         if (e.key == 'Enter') {
             const input = e.target as HTMLInputElement;
-            this.readDirectory(input.value, input);
+            this.readDirectory(input.value, true, input);
         }
     }
 
+    private onBackButtonClick() {
+        this.state.nextPaths.push(this.state.previousPaths.pop());
+        this.readDirectory(this.state.previousPaths[this.state.previousPaths.length - 1], false);
+    }
+
+    private onForwardButtonClick() {
+        const directoryPath = this.state.nextPaths.pop();
+        this.readDirectory(directoryPath, false);
+    }
+
+    private onUpButtonClick() {
+        const [parts, separator] = this.splitPath(this.state.currentPath);
+        parts[parts.length - 1] = '';       // We do not remove the element because on Windows we want to go to "X:\", and not "X:".
+        this.readDirectory(parts.join(separator), true);
+    }
+
     componentDidMount() {
-        this.readDirectory(this.state.locationInputValue);
+        this.readDirectory(this.state.locationInputValue, false);
     }
 
     private renderRow(element : any) {
@@ -160,15 +233,28 @@ export class Files extends React.Component<FilesProps, FilesState> {
                         variant="dense"
                         disableGutters
                     >
-                        <IconButton color="inherit" edge="start">
+                        <IconButton
+                            color="inherit"
+                            edge="start"
+                            disabled={!this.canGoBack()}
+                            onClick={() => this.onBackButtonClick()}
+                        >
                             <Icon>arrow_back</Icon>
                         </IconButton>
 
-                        <IconButton color="inherit">
+                        <IconButton
+                            color="inherit"
+                            disabled={!this.canGoForward()}
+                            onClick={() => this.onForwardButtonClick()}
+                        >
                             <Icon>arrow_forward</Icon>
                         </IconButton>
 
-                        <IconButton color="inherit">
+                        <IconButton
+                            color="inherit"
+                            disabled={!this.canGoUp()}
+                            onClick={() => this.onUpButtonClick()}
+                        >
                             <Icon>arrow_upward</Icon>
                         </IconButton>
 
