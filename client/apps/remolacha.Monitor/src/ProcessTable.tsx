@@ -17,7 +17,7 @@ interface ProcessTableState {
     columns? : Array<any>;
     processes? : Array<Array<any>>;
     selected? : Set<number>;
-    error? : Error,
+    error? : any,
     killingState? : KillingState
 }
 

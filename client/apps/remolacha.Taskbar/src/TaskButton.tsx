@@ -16,6 +16,7 @@ export class TaskButton extends React.Component<TaskButtonProps, TaskButtonState
 
         props.window.events.on('focus', () => this.forceUpdate());
         props.window.events.on('blur', () => this.forceUpdate());
+        props.window.events.on('titleChange', () => this.forceUpdate());
     }
 
     private onClick() {

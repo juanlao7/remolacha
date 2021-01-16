@@ -18,9 +18,10 @@ interface DataTableProps {
     className? : string;
     size? : Size;
     padding? : Padding;
-    rowKey? : (rowIndex : number) => string
-    rowSelected? : (rowIndex : number) => boolean
-    onRowClick? : (rowIndex : number) => void
+    rowKey? : (rowIndex : number) => string;
+    rowSelected? : (rowIndex : number) => boolean;
+    onRowClick? : (rowIndex : number) => void;
+    onRowDoubleClick? : (rowIndex : number) => void;
 }
 
 interface DataTableState {
@@ -121,6 +122,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                             selected={(this.props.rowSelected) ? this.props.rowSelected(originalIndex) : false}
                             hover
                             onClick={() => this.props.onRowClick && this.props.onRowClick(originalIndex)}
+                            onDoubleClick={() => this.props.onRowDoubleClick && this.props.onRowDoubleClick(originalIndex)}
                         >
                             {this.props.columns.map((column, columnIndex) => (
                                 <TableCell padding={column.bodyCellPadding}>{row[columnIndex]}</TableCell>

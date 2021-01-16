@@ -26,7 +26,7 @@ async function readDirectoryImpl(directoryPath : string) : Promise<Array<Directo
     for (const name of names) {
         const element : DirectoryElement = {name: name};
 
-        promises.push(new Promise(async (resolve, reject) => {
+        promises.push(new Promise(async (resolve) => {
             try {
                 const statResult = await stat(path.join(directoryPath, name)) as fs.Stats;
 
@@ -37,12 +37,12 @@ async function readDirectoryImpl(directoryPath : string) : Promise<Array<Directo
                     element.type = DirectoryElementType.FILE;
                     element.size = statResult.size;
                 }
-
-                resolve(undefined);
             }
             catch (e) {
-                reject(e);
+                // Nothing to do.
             }
+
+            resolve(undefined);
         }));
 
         elements.push(element);
