@@ -125,7 +125,7 @@ export class AppTable extends React.Component<AppTableProps, AppTableState> {
                                 (this.state.selected.size == 0) ?
                                     'App instances running on client-side'
                                 :
-                                    `${this.state.selected.size} app instance${this.state.selected.size != 1 && 's'} selected`
+                                    `${this.state.selected.size} app instance${(this.state.selected.size != 1) ? 's' : ''} selected`
                             :
                                 this.state.error.message}
                         </Typography>

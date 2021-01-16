@@ -203,7 +203,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
                     <Toolbar variant="dense">
                         <Typography variant="body1" color="inherit">
                             {(this.state.error == null) ?
-                                `${this.state.elements.length} element${this.state.elements.length != 1 && 's'}`
+                                `${this.state.elements.length} element${(this.state.elements.length != 1) ? 's' : ''}`
                             :
                                 this.state.error}
                         </Typography>
