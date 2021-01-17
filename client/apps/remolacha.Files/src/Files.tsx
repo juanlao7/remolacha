@@ -22,6 +22,7 @@ interface FilesState {
 
 export class Files extends React.Component<FilesProps, FilesState> {
     private static readonly PERMISSION_CHARACTERS : string = 'xwrxwrxwr';
+    private static readonly SPECIAL_PERMISSION_CHARACTERS : Array<string> = [...'sst'];
     private static readonly MODE_LINK : number = 0o012;
     
     private static readonly MODE_PREFIXES : Map<number, string> = new Map([
@@ -292,13 +293,17 @@ export class Files extends React.Component<FilesProps, FilesState> {
                 const specialPermissionFlag = 1 << (i + 9);
 
                 if (element.mode & specialPermissionFlag) {
-                    permissionCharacters[3 * i] = 's';
+                    permissionCharacters[3 * i] = Files.SPECIAL_PERMISSION_CHARACTERS[i];
                 }
             }
 
             const prefix = (Files.MODE_PREFIXES.has(prefixCode)) ? Files.MODE_PREFIXES.get(prefixCode) : '-';
             const permissions = permissionCharacters.map((c, i) => (element.mode & (1 << i)) ? c : '-').reverse().join('');
             mode = <span className="remolacha_app_Files_modeCell">{prefix + permissions}</span>;
+
+            console.log('--------');
+            console.log(element.name);
+            console.log(element.mode.toString(8));
         }
         
         return [name, type, size, modified, mode];
