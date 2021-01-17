@@ -36,15 +36,8 @@ async function readDirectoryImpl(directoryPath : string) : Promise<Array<Directo
                 const elementPath = path.join(directoryPath, name);
                 const lstatResult = await lstat(elementPath) as fs.Stats;
                 const typeStatResult = (lstatResult.isSymbolicLink()) ? await stat(elementPath) as fs.Stats : lstatResult;
-
-                if (typeStatResult.isDirectory()) {
-                    element.type = DirectoryElementType.DIRECTORY;
-                }
-                else {
-                    element.type = DirectoryElementType.FILE;
-                    element.size = lstatResult.size;
-                }
-
+				element.type = (typeStatResult.isDirectory()) ? DirectoryElementType.DIRECTORY : DirectoryElementType.FILE;
+                element.size = lstatResult.size;
                 element.modified = lstatResult.mtime.getTime();
                 element.mode = lstatResult.mode;
             }
