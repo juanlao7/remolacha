@@ -19,7 +19,8 @@ export class FilesAppInitializer {
                 id: 'folder'
             },
             width: 640,
-            height: 480
+            height: 480,
+            className: 'remolacha_app_Files_window'
         });
 
         window.events.on('destroy', () => appInstance.exit());

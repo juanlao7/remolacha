@@ -1,5 +1,5 @@
 import React from 'react';
-import { ThemeProvider, AppBar, Toolbar, IconButton, Icon, InputBase, Typography } from '@material-ui/core';
+import { ThemeProvider, AppBar, Toolbar, IconButton, Icon, InputBase, Typography, LinearProgress } from '@material-ui/core';
 import prettyBytes from 'pretty-bytes';
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
@@ -13,7 +13,7 @@ interface FilesState {
     currentPath? : string;
     locationInputValue? : string;
     elements? : Array<any>;
-    selected? : Set<string>;
+    selected? : Map<string, number>;
     previousPaths? : Array<string>;
     nextPaths? : Array<string>;
     error? : any;
@@ -45,7 +45,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
             currentPath: null,
             locationInputValue: '',
             elements: [],
-            selected: new Set(),
+            selected: new Map(),
             previousPaths: [],
             nextPaths: [],
             error: null
@@ -73,7 +73,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
         const newState : FilesState = {
             currentPath: null,
             elements: [],
-            selected: new Set(),
+            selected: new Map(),
             error: null
         };
 
@@ -152,20 +152,26 @@ export class Files extends React.Component<FilesProps, FilesState> {
         return (parts[parts.length - 1].length > 0);
     }
 
-    private onRowClick(rowIndex : number) {
+    private onRowClick(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) {
         const name = this.state.elements[rowIndex].name;
 
-        if (this.state.selected.has(name)) {
-            this.state.selected.delete(name);
+        if (e.ctrlKey) {
+            if (this.state.selected.has(name)) {
+                this.state.selected.delete(name);
+            }
+            else {
+                this.state.selected.set(name, this.state.elements[rowIndex].size || 0);
+            }
         }
         else {
-            this.state.selected.add(name);
+            this.state.selected.clear();
+            this.state.selected.set(name, this.state.elements[rowIndex].size || 0);
         }
 
         this.setState({selected: this.state.selected});
     }
 
-    private onRowDoubleClick(rowIndex : number) {
+    private onRowDoubleClick(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) {
         if (this.state.elements[rowIndex].type == 'd') {
             const [parts, separator] = this.splitPath(this.state.currentPath);
 
@@ -286,6 +292,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
                             placeholder="Location"
                             spellCheck="false"
                             value={this.state.locationInputValue}
+                            disabled={this.state.currentPath == null}
                             onChange={e => this.onLocationInputChange(e)}
                             onBlur={() => this.onLocationInputBlur()}
                             onKeyPress={e => this.onLocationInputKeyPress(e)}
@@ -300,19 +307,29 @@ export class Files extends React.Component<FilesProps, FilesState> {
                     size="small"
                     rowKey={(rowIndex : number) => this.state.elements[rowIndex].name}
                     rowSelected={(rowIndex : number) => this.state.selected.has(this.state.elements[rowIndex].name)}
-                    onRowClick={(rowIndex : number) => this.onRowClick(rowIndex)}
-                    onRowDoubleClick={(rowIndex : number) => this.onRowDoubleClick(rowIndex)}
+                    onRowClick={(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) => this.onRowClick(rowIndex, e)}
+                    onRowDoubleClick={(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) => this.onRowDoubleClick(rowIndex, e)}
                 />
 
                 <AppBar className="remolacha_app_Files_statusBar" position="static">
                     <Toolbar variant="dense">
                         <Typography variant="body1" color="inherit">
                             {(this.state.error == null) ?
-                                `${this.state.elements.length} element${(this.state.elements.length != 1) ? 's' : ''}`
+                                (this.state.currentPath == null) ?
+                                    'Loading...'
+                                :
+                                    (this.state.selected.size == 0) ?
+                                        `${this.state.elements.length} element${(this.state.elements.length != 1) ? 's' : ''}`
+                                    :
+                                        `${this.state.selected.size} element${(this.state.selected.size != 1) ? 's' : ''} selected, ${prettyBytes([...this.state.selected.values()].reduce((a, b) => a + b, 0))}`
                             :
                                 this.state.error}
                         </Typography>
                     </Toolbar>
+
+                    {this.state.currentPath == null &&
+                    <LinearProgress className="remolacha_app_Files_progressBar" color="secondary" />
+                    }
                 </AppBar>
             </ThemeProvider>
         );
