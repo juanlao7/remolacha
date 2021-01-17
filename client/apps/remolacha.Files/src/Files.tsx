@@ -35,6 +35,26 @@ export class Files extends React.Component<FilesProps, FilesState> {
         [0o014, 's']
     ]);
 
+    private static readonly TYPE_TO_LABEL : Map<string, string> = new Map([
+        ['f', 'File'],
+        ['d', 'Directory'],
+        ['p', 'FIFO pipe'],
+        ['s', 'Socket'],
+        ['c', 'Character device'],
+        ['b', 'Block device'],
+        ['u', 'Unknown']
+    ]);
+
+    private static readonly TYPE_TO_ICON : Map<string, string> = new Map([
+        ['f', 'insert_drive_file'],
+        ['d', 'folder'],
+        ['p', 'receipt'],
+        ['s', 'settings_input_hdmi'],
+        ['c', 'sd_storage'],
+        ['b', 'sd_storage'],
+        ['u', 'help_center']
+    ]);
+
     private static readonly COLUMNS : Array<any> = [
         {
             id: 'name',
@@ -252,25 +272,15 @@ export class Files extends React.Component<FilesProps, FilesState> {
     }
 
     private renderRow(element : any) {
-        let icon : string;
-        let type : string;
+        let type = Files.TYPE_TO_LABEL.get(element.type);
+        const icon = Files.TYPE_TO_ICON.get(element.type);
 
-        if (element.type == 'd') {
-            icon = 'folder';
-            type = 'Directory';
-        }
-        else if (element.type == 'f') {
-            icon = 'insert_drive_file';
-            type = 'File';
+        if (element.type == 'f') {
             const parts : Array<string> = element.name.substr(1).split('.');        // substr(1) to skip first '.' (if present, otherwise it does not matter).
 
             if (parts.length > 1) {
                 type += ` (${parts[parts.length - 1].toUpperCase()})`
             }
-        }
-        else {
-            icon = 'help_center';
-            type = 'Unknown';
         }
 
         let className = `remolacha_app_Files_type_${element.type}`;

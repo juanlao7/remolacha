@@ -12,6 +12,10 @@ const stat = promisify(fs.stat);
 enum DirectoryElementType {
     FILE = 'f',
     DIRECTORY = 'd',
+    FIFO = 'p',
+    SOCKET = 's',
+    CHARACTER_DEVICE = 'c',
+    BLOCK_DEVICE = 'b',
     UNKNOWN = 'u'
 }
 
@@ -22,6 +26,14 @@ interface DirectoryElement {
     modified? : number;
     mode? : number;
 }
+
+const DIRECTORY_ELEMENT_TYPE_FUNCTIONS : Array<[keyof fs.Stats, DirectoryElementType]> = [
+    ['isDirectory', DirectoryElementType.DIRECTORY],
+    ['isFIFO', DirectoryElementType.FIFO],
+    ['isSocket', DirectoryElementType.SOCKET],
+    ['isCharacterDevice', DirectoryElementType.CHARACTER_DEVICE],
+    ['isBlockDevice', DirectoryElementType.BLOCK_DEVICE]
+];
 
 async function readDirectoryImpl(directoryPath : string) : Promise<Array<DirectoryElement>> {
     const names = await readdir(directoryPath) as Array<string>;
@@ -36,7 +48,15 @@ async function readDirectoryImpl(directoryPath : string) : Promise<Array<Directo
                 const elementPath = path.join(directoryPath, name);
                 const lstatResult = await lstat(elementPath) as fs.Stats;
                 const typeStatResult = (lstatResult.isSymbolicLink()) ? await stat(elementPath) as fs.Stats : lstatResult;
-				element.type = (typeStatResult.isDirectory()) ? DirectoryElementType.DIRECTORY : DirectoryElementType.FILE;
+                element.type = DirectoryElementType.FILE;
+
+                for (const [func, elementType] of DIRECTORY_ELEMENT_TYPE_FUNCTIONS) {
+                    if ((typeStatResult[func] as () => boolean)()) {
+                        element.type = elementType;
+                        break;
+                    }
+                }
+                
                 element.size = lstatResult.size;
                 element.modified = lstatResult.mtime.getTime();
                 element.mode = lstatResult.mode;
