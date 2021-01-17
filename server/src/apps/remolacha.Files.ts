@@ -6,7 +6,7 @@ import { App } from '../App';
 import { Connection } from '../Connection';
 
 const readdir = promisify(fs.readdir);
-const stat = promisify(fs.stat);
+const lstat = promisify(fs.lstat);
 
 enum DirectoryElementType {
     FILE = 'f',
@@ -32,7 +32,7 @@ async function readDirectoryImpl(directoryPath : string) : Promise<Array<Directo
 
         promises.push(new Promise(async (resolve) => {
             try {
-                const statResult = await stat(path.join(directoryPath, name)) as fs.Stats;
+                const statResult = await lstat(path.join(directoryPath, name)) as fs.Stats;
 
                 if (statResult.isDirectory()) {
                     element.type = DirectoryElementType.DIRECTORY;

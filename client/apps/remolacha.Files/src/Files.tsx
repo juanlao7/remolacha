@@ -22,7 +22,7 @@ interface FilesState {
 
 export class Files extends React.Component<FilesProps, FilesState> {
     private static readonly PERMISSION_CHARACTERS : string = 'xwrxwrxwr';
-    private static readonly SPECIAL_PERMISSION_CHARACTERS : Array<string> = [...'sst'];
+    private static readonly SPECIAL_PERMISSION_CHARACTERS : Array<string> = [...'tss'];
     private static readonly MODE_LINK : number = 0o012;
     
     private static readonly MODE_PREFIXES : Map<number, string> = new Map([
