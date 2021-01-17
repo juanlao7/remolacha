@@ -195,6 +195,10 @@ export class Files extends React.Component<FilesProps, FilesState> {
         return (parts[parts.length - 1].length > 0);
     }
 
+    private sumBytes(numbers : Array<number>) : string {
+        return prettyBytes(numbers.reduce((a, b) => a + b, 0));
+    }
+
     private onRowClick(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) {
         const name = this.state.elements[rowIndex].name;
 
@@ -389,9 +393,9 @@ export class Files extends React.Component<FilesProps, FilesState> {
                                     'Loading...'
                                 :
                                     (this.state.selected.size == 0) ?
-                                        `${this.state.elements.length} element${(this.state.elements.length != 1) ? 's' : ''}`
+                                        `${this.state.elements.length} element${(this.state.elements.length != 1) ? 's' : ''}, ${this.sumBytes(this.state.elements.map(x => x.size))}`
                                     :
-                                        `${this.state.selected.size} element${(this.state.selected.size != 1) ? 's' : ''} selected, ${prettyBytes([...this.state.selected.values()].reduce((a, b) => a + b, 0))}`
+                                        `${this.state.selected.size} element${(this.state.selected.size != 1) ? 's' : ''} selected, ${this.sumBytes([...this.state.selected.values()])}`
                             :
                                 this.state.error}
                         </Typography>
