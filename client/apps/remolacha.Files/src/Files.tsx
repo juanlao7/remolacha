@@ -300,10 +300,6 @@ export class Files extends React.Component<FilesProps, FilesState> {
             const prefix = (Files.MODE_PREFIXES.has(prefixCode)) ? Files.MODE_PREFIXES.get(prefixCode) : '-';
             const permissions = permissionCharacters.map((c, i) => (element.mode & (1 << i)) ? c : '-').reverse().join('');
             mode = <span className="remolacha_app_Files_modeCell">{prefix + permissions}</span>;
-
-            console.log('--------');
-            console.log(element.name);
-            console.log(element.mode.toString(8));
         }
         
         return [name, type, size, modified, mode];

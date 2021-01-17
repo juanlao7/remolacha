@@ -7,6 +7,7 @@ import { Connection } from '../Connection';
 
 const readdir = promisify(fs.readdir);
 const lstat = promisify(fs.lstat);
+const stat = promisify(fs.stat);
 
 enum DirectoryElementType {
     FILE = 'f',
@@ -32,18 +33,20 @@ async function readDirectoryImpl(directoryPath : string) : Promise<Array<Directo
 
         promises.push(new Promise(async (resolve) => {
             try {
-                const statResult = await lstat(path.join(directoryPath, name)) as fs.Stats;
+                const elementPath = path.join(directoryPath, name);
+                const lstatResult = await lstat(elementPath) as fs.Stats;
+                const typeStatResult = (lstatResult.isSymbolicLink()) ? await stat(elementPath) as fs.Stats : lstatResult;
 
-                if (statResult.isDirectory()) {
+                if (typeStatResult.isDirectory()) {
                     element.type = DirectoryElementType.DIRECTORY;
                 }
                 else {
                     element.type = DirectoryElementType.FILE;
-                    element.size = statResult.size;
+                    element.size = lstatResult.size;
                 }
 
-                element.modified = statResult.mtime.getTime();
-                element.mode = statResult.mode;
+                element.modified = lstatResult.mtime.getTime();
+                element.mode = lstatResult.mode;
             }
             catch (e) {
                 element.type = DirectoryElementType.UNKNOWN;
