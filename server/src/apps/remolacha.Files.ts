@@ -10,7 +10,8 @@ const stat = promisify(fs.stat);
 
 enum DirectoryElementType {
     FILE = 'f',
-    DIRECTORY = 'd'
+    DIRECTORY = 'd',
+    UNKNOWN = 'u'
 }
 
 interface DirectoryElement {
@@ -40,7 +41,7 @@ async function readDirectoryImpl(directoryPath : string) : Promise<Array<Directo
                 }
             }
             catch (e) {
-                // Nothing to do.
+                element.type = DirectoryElementType.UNKNOWN;
             }
 
             resolve(undefined);

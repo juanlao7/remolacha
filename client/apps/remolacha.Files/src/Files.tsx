@@ -236,9 +236,13 @@ export class Files extends React.Component<FilesProps, FilesState> {
             icon = 'folder';
             type = 'Directory';
         }
-        else {
+        else if (element.type == 'f') {
             icon = 'insert_drive_file';
             type = 'File';
+        }
+        else {
+            icon = 'help_center';
+            type = 'Unknown';
         }
 
         const size = (element.size == null) ? null : prettyBytes(element.size);
