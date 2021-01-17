@@ -1,5 +1,6 @@
 import React from 'react';
 import { ThemeProvider, AppBar, Toolbar, IconButton, Icon, InputBase, Typography } from '@material-ui/core';
+import prettyBytes from 'pretty-bytes';
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
@@ -234,7 +235,8 @@ export class Files extends React.Component<FilesProps, FilesState> {
             type = 'File';
         }
 
-        return [<span><Icon className={element.type} color="primary">{icon}</Icon> {element.name}</span>, type, element.size];
+        const size = (element.size == null) ? null : prettyBytes(element.size);
+        return [<span><Icon className={element.type} color="primary">{icon}</Icon> {element.name}</span>, type, size];
     }
 
     render() {
