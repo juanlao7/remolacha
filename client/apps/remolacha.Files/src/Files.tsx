@@ -196,7 +196,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
     }
 
     private sumBytes(numbers : Array<number>) : string {
-        return prettyBytes(numbers.reduce((a, b) => a + b, 0));
+        return prettyBytes(numbers.filter(x => (x != null)).reduce((a, b) => a + b, 0));
     }
 
     private onRowClick(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) {
@@ -207,12 +207,12 @@ export class Files extends React.Component<FilesProps, FilesState> {
                 this.state.selected.delete(name);
             }
             else {
-                this.state.selected.set(name, this.state.elements[rowIndex].size || 0);
+                this.state.selected.set(name, this.state.elements[rowIndex].size);
             }
         }
         else {
             this.state.selected.clear();
-            this.state.selected.set(name, this.state.elements[rowIndex].size || 0);
+            this.state.selected.set(name, this.state.elements[rowIndex].size);
         }
 
         this.setState({selected: this.state.selected});
