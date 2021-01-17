@@ -1,6 +1,7 @@
 import React from 'react';
 import { ThemeProvider, AppBar, Toolbar, IconButton, Icon, InputBase, Typography, LinearProgress } from '@material-ui/core';
 import prettyBytes from 'pretty-bytes';
+import { DateTime } from 'luxon';
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
@@ -20,6 +21,19 @@ interface FilesState {
 }
 
 export class Files extends React.Component<FilesProps, FilesState> {
+    private static readonly PERMISSION_CHARACTERS : string = 'xwrxwrxwr';
+    private static readonly MODE_LINK : number = 0o012;
+    
+    private static readonly MODE_PREFIXES : Map<number, string> = new Map([
+        [0o001, 'p'],
+        [0o002, 'c'],
+        [0o004, 'd'],
+        [0o006, 'b'],
+        [0o010, '-'],
+        [0o012, 'l'],
+        [0o014, 's']
+    ]);
+
     private static readonly COLUMNS : Array<any> = [
         {
             id: 'name',
@@ -32,6 +46,14 @@ export class Files extends React.Component<FilesProps, FilesState> {
         {
             id: 'size',
             content: 'Size'
+        },
+        {
+            id: 'modified',
+            content: 'Modified'
+        },
+        {
+            id: 'mode',
+            content: 'Mode'
         }
     ];
 
@@ -239,14 +261,47 @@ export class Files extends React.Component<FilesProps, FilesState> {
         else if (element.type == 'f') {
             icon = 'insert_drive_file';
             type = 'File';
+            const parts : Array<string> = element.name.substr(1).split('.');        // substr(1) to skip first '.' (if present, otherwise it does not matter).
+
+            if (parts.length > 1) {
+                type += ` (${parts[parts.length - 1].toUpperCase()})`
+            }
         }
         else {
             icon = 'help_center';
             type = 'Unknown';
         }
 
+        let className = `remolacha_app_Files_type_${element.type}`;
+        const prefixCode = (element.mode == null) ? 0 : element.mode >> 12;
+
+        if (prefixCode == Files.MODE_LINK) {
+            className += ' remolacha_app_Files_symbolicLink';
+            type += ' — symbolic link';
+        }
+
+        const name = <span className={className}><Icon color="primary">{icon}</Icon> {element.name}</span>;
         const size = (element.size == null) ? null : prettyBytes(element.size);
-        return [<span><Icon className={element.type} color="primary">{icon}</Icon> {element.name}</span>, type, size];
+        const modified = (element.modified == null) ? null : DateTime.fromMillis(element.modified).toFormat('yyyy-LL-dd HH:mm');
+        let mode = null;
+
+        if (element.mode != null) {
+            const permissionCharacters = [...Files.PERMISSION_CHARACTERS];
+
+            for (let i = 0; i < 3; ++i) {
+                const specialPermissionFlag = 1 << (i + 9);
+
+                if (element.mode & specialPermissionFlag) {
+                    permissionCharacters[3 * i] = 's';
+                }
+            }
+
+            const prefix = (Files.MODE_PREFIXES.has(prefixCode)) ? Files.MODE_PREFIXES.get(prefixCode) : '-';
+            const permissions = permissionCharacters.map((c, i) => (element.mode & (1 << i)) ? c : '-').reverse().join('');
+            mode = <span className="remolacha_app_Files_modeCell">{prefix + permissions}</span>;
+        }
+        
+        return [name, type, size, modified, mode];
     }
 
     render() {

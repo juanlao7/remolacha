@@ -22,14 +22,22 @@
 
     .remolacha_app_Files_fileList
         flex-grow: 1
+        white-space: nowrap
 
         .material-icons
             vertical-align: middle
             margin-right: 8px
 
-            &.f,
-            &.u
+        .remolacha_app_Files_type_f,
+        .remolacha_app_Files_type_u
+            .material-icons
                 color: #aaa
+        
+        .remolacha_app_Files_symbolicLink
+            font-style: italic
+        
+        .remolacha_app_Files_modeCell
+            font-family: Roboto Mono
 
     .remolacha_app_Files_statusBar p
         pointer-events: none

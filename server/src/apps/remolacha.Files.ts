@@ -18,6 +18,8 @@ interface DirectoryElement {
     name : string;
     type? : DirectoryElementType;
     size? : number;
+    modified? : number;
+    mode? : number;
 }
 
 async function readDirectoryImpl(directoryPath : string) : Promise<Array<DirectoryElement>> {
@@ -39,6 +41,9 @@ async function readDirectoryImpl(directoryPath : string) : Promise<Array<Directo
                     element.type = DirectoryElementType.FILE;
                     element.size = statResult.size;
                 }
+
+                element.modified = statResult.mtime.getTime();
+                element.mode = statResult.mode;
             }
             catch (e) {
                 element.type = DirectoryElementType.UNKNOWN;
