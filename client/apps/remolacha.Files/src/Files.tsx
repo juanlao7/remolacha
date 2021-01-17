@@ -42,7 +42,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
 
         this.state = {
             currentPath: null,
-            locationInputValue: '.',
+            locationInputValue: '',
             elements: [],
             selected: new Set(),
             previousPaths: [],
@@ -71,7 +71,6 @@ export class Files extends React.Component<FilesProps, FilesState> {
 
         const newState : FilesState = {
             currentPath: null,
-            locationInputValue: directoryPath,
             elements: [],
             selected: new Set(),
             error: null
@@ -81,9 +80,19 @@ export class Files extends React.Component<FilesProps, FilesState> {
             newState.nextPaths = [];
         }
 
-        this.setState(newState);
+        let params : any = {cwd: this.state.currentPath};
 
-        const connection = this.props.appInstance.createBackendConnection('readDirectory', {path: directoryPath});
+        if (directoryPath == null) {
+            params.goHome = true;
+            newState.locationInputValue = '';
+        }
+        else {
+            params.path = directoryPath;
+            newState.locationInputValue = directoryPath;
+        }
+
+        this.setState(newState);
+        const connection = this.props.appInstance.createBackendConnection('readDirectory', params);
 
         connection.events.on('error', (emitter : any, error : any) => {
             if (input != null) {
@@ -204,8 +213,12 @@ export class Files extends React.Component<FilesProps, FilesState> {
         this.readDirectory(parts.join(separator), true);
     }
 
+    private onHomeButtonClick() {
+        this.readDirectory(null, true);
+    }
+
     componentDidMount() {
-        this.readDirectory(this.state.locationInputValue, false);
+        this.readDirectory(null, false);
     }
 
     private renderRow(element : any) {
@@ -258,7 +271,11 @@ export class Files extends React.Component<FilesProps, FilesState> {
                             <Icon>arrow_upward</Icon>
                         </IconButton>
 
-                        <IconButton color="inherit">
+                        <IconButton
+                            color="inherit"
+                            disabled={this.state.currentPath == null}
+                            onClick={() => this.onHomeButtonClick()}
+                        >
                             <Icon>home</Icon>
                         </IconButton>
 

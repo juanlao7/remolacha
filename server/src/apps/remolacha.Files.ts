@@ -1,5 +1,5 @@
 import fs from 'fs-extra';
-import { connect } from 'http2';
+import os from 'os';
 import path from 'path';
 import { promisify } from 'util';
 import { App } from '../App';
@@ -56,11 +56,19 @@ async function readDirectoryImpl(directoryPath : string) : Promise<Array<Directo
 const app : App = {
     readDirectory: async (params : any, connection : Connection) => {
         try {
-            if (params == null || typeof params != 'object' || !(typeof params.path == 'string' || params.path instanceof String)) {
+            if (params == null || typeof params != 'object' || !('goHome' in params || typeof params.path == 'string' || params.path instanceof String)) {
                 throw new Error('Unexpected params.');
             }
 
-            const directoryPath = path.resolve(params.path);
+            let directoryPath = ('goHome' in params) ? os.homedir() : params.path;
+
+            if (path.isAbsolute(directoryPath)) {
+                directoryPath = path.resolve(directoryPath);
+            }
+            else if (params.cwd != null) {
+                directoryPath = path.resolve(path.join(params.cwd, directoryPath));
+            }
+
             let elements : Array<DirectoryElement> = [];
             let error : string = null;
 
