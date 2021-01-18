@@ -18,8 +18,8 @@ export class FilesAppInitializer {
                 type: 'material-icon',
                 id: 'folder'
             },
-            width: 640,
-            height: 480,
+            width: 800,
+            height: 500,
             className: 'remolacha_app_Files_window'
         });
 

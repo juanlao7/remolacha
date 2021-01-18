@@ -45,6 +45,8 @@ export class BackendConnection {
             return;
         }
 
+        const backend = Backend.getInstance();
+        backend.events.detach(this.onMessageListenerId);
         this.state = BackendConnectionState.CLOSED;
         this.events.fire('close');
     }
@@ -70,15 +72,12 @@ export class BackendConnection {
             return;
         }
 
-        const backend = Backend.getInstance();
-        backend.events.detach(this.onMessageListenerId);
+        this.finallyClose();
 
-        backend.sendMessage({
+        Backend.getInstance().sendMessage({
             action: 'close',
             connectionId: this.connectionId
         });
-
-        this.finallyClose();
     }
 
     send(data : any) {

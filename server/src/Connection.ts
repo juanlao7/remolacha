@@ -23,11 +23,19 @@ export class Connection {
                 this.events.fire('data', message.data);
             }
             else if (message.action == 'close') {
-                this.closed = true;
-                this.session.events.detach(this.onSessionMessageListenerId);
-                this.events.fire('close');
+                this.finallyClose();
             }
         });
+    }
+
+    private finallyClose() {
+        if (this.closed) {
+            return;
+        }
+        
+        this.closed = true;
+        this.session.events.detach(this.onSessionMessageListenerId);
+        this.events.fire('close');
     }
 
     send(data : any) {
@@ -58,6 +66,8 @@ export class Connection {
         if (this.closed) {
             return;
         }
+
+        this.finallyClose();
 
         this.session.send({
             action: 'close',

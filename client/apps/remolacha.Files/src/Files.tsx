@@ -136,9 +136,9 @@ export class Files extends React.Component<FilesProps, FilesState> {
         }
 
         this.setState(newState);
-        const connection = this.props.appInstance.createBackendConnection('readDirectory', params);
+        this.connection = this.props.appInstance.createBackendConnection('readDirectory', params);
 
-        connection.events.on('error', (emitter : any, error : any) => {
+        this.connection.events.on('error', (emitter : any, error : any) => {
             if (input != null) {
                 input.select();
             }
@@ -146,7 +146,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
             this.setState({error: error});
         });
 
-        connection.events.on('data', (emitter : any, data : any) => {
+        this.connection.events.on('data', (emitter : any, data : any) => {
             if (input != null) {
                 input.blur();
             }
@@ -175,7 +175,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
             this.props.window.setState({title: title});
         });
 
-        connection.open();
+        this.connection.open();
     }
 
     private canGoBack() : boolean {

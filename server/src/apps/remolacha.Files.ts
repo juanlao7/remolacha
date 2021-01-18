@@ -35,7 +35,7 @@ const DIRECTORY_ELEMENT_TYPE_FUNCTIONS : Array<[keyof fs.Stats, DirectoryElement
     ['isBlockDevice', DirectoryElementType.BLOCK_DEVICE]
 ];
 
-async function readDirectoryImpl(directoryPath : string) : Promise<Array<DirectoryElement>> {
+async function getDirectoryElements(directoryPath : string) : Promise<Array<DirectoryElement>> {
     const names = await readdir(directoryPath) as Array<string>;
     const elements : Array<DirectoryElement> = [];
     const promises : Array<Promise<unknown>> = [];
@@ -75,6 +75,28 @@ async function readDirectoryImpl(directoryPath : string) : Promise<Array<Directo
     return elements;
 }
 
+async function readDirectoryImpl(directoryPath : string, connection : Connection) {
+    let elements : Array<DirectoryElement> = [];
+    let error : any = null;
+
+    try {
+        elements = await getDirectoryElements(directoryPath);
+    }
+    catch (e) {
+        // We want to send the error, but first we want to update the UI with the resolved path.
+        error = e;
+    }
+    
+    connection.send({
+        path: directoryPath,
+        elements: elements
+    });
+
+    if (error != null) {
+        throw error;
+    }
+}
+
 const app : App = {
     readDirectory: async (params : any, connection : Connection) => {
         try {
@@ -91,27 +113,27 @@ const app : App = {
                 directoryPath = path.resolve(path.join(params.cwd, directoryPath));
             }
 
-            let elements : Array<DirectoryElement> = [];
-            let error : string = null;
-
-            try {
-                elements = await readDirectoryImpl(directoryPath);
-            }
-            catch (e) {
-                // We want to send the error, but also update the UI with the resolved path.
-                error = e.message;
-            }
-            
-            connection.send({
-                path: directoryPath,
-                elements: elements
-            });
-
-            if (error != null) {
-                connection.fail(error);
+            function onWatch() {
+                try {
+                    readDirectoryImpl(directoryPath, connection);
+                    watcher.close();
+                    startWatcher();
+                }
+                catch (e) {
+                    connection.fail(e.message);
+                    connection.close();
+                }
             }
 
-            // TODO: check changes
+            function startWatcher() {
+                watcher = fs.watch(directoryPath, onWatch);
+            }
+
+            let watcher : fs.FSWatcher;
+            startWatcher();
+            connection.events.once('close', () => watcher.close());
+
+            readDirectoryImpl(directoryPath, connection);
         }
         catch (e) {
             connection.fail(e.message);
