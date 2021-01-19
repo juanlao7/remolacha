@@ -36,18 +36,23 @@ interface DataTableState {
 
 export class DataTable extends React.Component<DataTableProps, DataTableState> {
     private static readonly DOUBLE_MOUSE_DOWN_THRESHOLD = 400;
+    private static readonly DOUBLE_MOUSE_DOWN_DISTANCE_THRESHOLD = 10;
 
     private originalToSortedIndex : Map<number, number>;
     private sortedToOriginalIndex : Map<number, number>;
-    private lastMouseDownTimestamp : number;
     private lastMouseDownRowIndex : number;
+    private lastMouseDownTimestamp : number;
+    private lastMouseDownMouseX : number;
+    private lastMouseDownMouseY : number;
 
     constructor(props : DataTableProps) {
         super(props);
         this.originalToSortedIndex = null;
         this.sortedToOriginalIndex = null;
-        this.lastMouseDownTimestamp = 0;
+        this.lastMouseDownTimestamp = -1;
         this.lastMouseDownRowIndex = -1;
+        this.lastMouseDownMouseX = -1;
+        this.lastMouseDownMouseY = -1;
 
         this.state = {
             orderBy: this.props.defaultOrderBy,
@@ -155,13 +160,15 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
 
         const now = Date.now();
 
-        if (this.props.onRowDoubleMouseDown && this.lastMouseDownRowIndex == rowIndex && now - this.lastMouseDownTimestamp < DataTable.DOUBLE_MOUSE_DOWN_THRESHOLD) {
-            this.props.onRowDoubleMouseDown(rowIndex, event);
+        if (this.props.onRowDoubleMouseDown && this.lastMouseDownRowIndex == rowIndex && now - this.lastMouseDownTimestamp < DataTable.DOUBLE_MOUSE_DOWN_THRESHOLD && Math.abs(this.lastMouseDownMouseX - event.clientX) + Math.abs(this.lastMouseDownMouseY - event.clientY) < DataTable.DOUBLE_MOUSE_DOWN_DISTANCE_THRESHOLD) {
             this.lastMouseDownRowIndex = -1;
+            this.props.onRowDoubleMouseDown(rowIndex, event);
         }
 
-        this.lastMouseDownTimestamp = now;
         this.lastMouseDownRowIndex = rowIndex;
+        this.lastMouseDownTimestamp = now;
+        this.lastMouseDownMouseX = event.clientX;
+        this.lastMouseDownMouseY = event.clientY;
     }
 
     render() {
