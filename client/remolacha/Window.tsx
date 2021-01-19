@@ -444,16 +444,29 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
                             {this.state.title}
                         </Typography>
 
-                        <Button color="inherit" onClick={() => this.onMinimizeButtonClick()}>
+                        {this.state.showInTaskbar &&
+                        <Button
+                            title="Minimize"
+                            color="inherit"
+                            onClick={() => this.onMinimizeButtonClick()}
+                        >
                             <Icon>minimize</Icon>
-                        </Button>
+                        </Button>}
 
                         {this.state.resizable &&
-                        <Button color="inherit" onClick={() => this.onMaximizeButtonClick()}>
+                        <Button
+                            title="Maximize"
+                            color="inherit"
+                            onClick={() => this.onMaximizeButtonClick()}
+                        >
                             <Icon fontSize="small">{(this.state.maximized) ? 'filter_none' : 'crop_square'}</Icon>
                         </Button>}
 
-                        <Button color="inherit" onClick={() => this.onCloseButtonClick()}>
+                        <Button
+                            title="Close"
+                            color="inherit"
+                            onClick={() => this.onCloseButtonClick()}
+                        >
                             <Icon>close</Icon>
                         </Button>
                     </Toolbar>

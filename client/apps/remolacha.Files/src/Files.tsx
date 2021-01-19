@@ -365,6 +365,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
                         disableGutters
                     >
                         <IconButton
+                            title="Back"
                             color="inherit"
                             edge="start"
                             disabled={!this.canGoBack()}
@@ -374,6 +375,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
                         </IconButton>
 
                         <IconButton
+                            title="Forward"
                             color="inherit"
                             disabled={!this.canGoForward()}
                             onClick={() => this.onForwardButtonClick()}
@@ -382,6 +384,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
                         </IconButton>
 
                         <IconButton
+                            title="Go up"
                             color="inherit"
                             disabled={!this.canGoUp()}
                             onClick={() => this.onUpButtonClick()}
@@ -390,6 +393,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
                         </IconButton>
 
                         <IconButton
+                            title="Go to home directory"
                             color="inherit"
                             disabled={this.state.currentPath == null}
                             onClick={() => this.onHomeButtonClick()}
