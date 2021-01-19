@@ -10,6 +10,8 @@ interface Column {
     align? : 'inherit' | 'left' | 'center' | 'right' | 'justify'
     bodyCellPadding? : Padding;
     headCellPadding? : Padding;
+    firstOrder? : Order;
+    descendingComparator? : (aRowIndex: number, bRowIndex : number, columnIndex : number) => number;
 }
 
 interface DataTableProps {
@@ -18,6 +20,7 @@ interface DataTableProps {
     className? : string;
     size? : Size;
     padding? : Padding;
+    defaultOrderBy? : number;
     rowKey? : (rowIndex : number) => string;
     rowSelected? : (rowIndex : number) => boolean;
     onRowClick? : (rowIndex : number, event : React.MouseEvent<HTMLTableRowElement, MouseEvent>) => void;
@@ -34,32 +37,57 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         super(props);
 
         this.state = {
-            orderBy: null,
-            order: null
+            orderBy: this.props.defaultOrderBy,
+            order: (this.props.defaultOrderBy == null) ? null : (this.props.columns[this.props.defaultOrderBy].firstOrder || 'asc')
         }
     }
 
-    private descendingComparator<T>(a : T, b : T, orderBy : keyof T) {
-        if (b[orderBy] < a[orderBy]) {
+    static genericDescendingComparator(a : any, b : any) : number {
+        if (a > b || (a != null && b == null)) {
             return -1;
         }
 
-        if (b[orderBy] > a[orderBy]) {
+        if (a < b || (a == null && b != null)) {
             return 1;
         }
 
         return 0;
     }
 
-    private getComparator<Key extends keyof any>(order : Order, orderBy : Key) : (a: {[key in Key] : number | string}, b : {[key in Key] : number | string}) => number {
-        return (order == 'desc') ? (a, b) => this.descendingComparator(a, b, orderBy) : (a, b) => -this.descendingComparator(a, b, orderBy);
+    private defaultDescendingComparator(aRowIndex : number, bRowIndex : number, columnIndex : number) : number {
+        return DataTable.genericDescendingComparator(this.props.rows[aRowIndex][columnIndex], this.props.rows[bRowIndex][columnIndex]);
     }
 
-    private stableSort(array : Array<any>, comparator: (a : any, b : any) => number) : Array<[any, number]> {
-        const stabilizedThis = array.map((x, index) => [x, index] as [any, number]);
+    private getComparator(order : Order, columnIndex : number) : (aRowIndex : number, bRowIndex : number) => number {
+        if (columnIndex == null) {
+            return null;
+        }
 
-        stabilizedThis.sort((a, b) => {
-            const order = comparator(a[0], b[0]);
+        let descendingComparator : (aRowIndex : number, bRowIndex : number, columnIndex : number) => number;
+        
+        if (this.props.columns[columnIndex].descendingComparator != null) {
+            descendingComparator = (aRowIndex, bRowIndex, columnIndex) => this.props.columns[columnIndex].descendingComparator(aRowIndex, bRowIndex, columnIndex);
+        }
+        else {
+            descendingComparator = (aRowIndex, bRowIndex, columnIndex) => this.defaultDescendingComparator(aRowIndex, bRowIndex, columnIndex);
+        }
+
+        if (order == 'desc') {
+            return (aRowIndex, bRowIndex) => descendingComparator(aRowIndex, bRowIndex, columnIndex);
+        }
+        
+        return (aRowIndex, bRowIndex) => -descendingComparator(aRowIndex, bRowIndex, columnIndex);
+    }
+
+    private stableSort(array : Array<any>, comparator: (aRowIndex : number, bRowIndex : number) => number) : Array<[any, number]> {
+        const stabilizedArray = array.map((x, index) => [x, index] as [any, number]);
+
+        if (comparator == null) {
+            return stabilizedArray;
+        }
+
+        stabilizedArray.sort((a, b) => {
+            const order = comparator(a[1], b[1]);
             
             if (order != 0) {
                 return order;
@@ -68,18 +96,21 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
             return a[1] - b[1];
         });
 
-        return stabilizedThis;
+        return stabilizedArray;
     }
 
     private onTableSortLabelClick(columnIndex : number) {
+        let firstOrder : Order = this.props.columns[columnIndex].firstOrder || 'asc';
+        let secondOrder : Order = (firstOrder == 'asc') ? 'desc' : 'asc';
+        
         const newState : DataTableState = {
             orderBy: columnIndex,
-            order: 'asc'
+            order: firstOrder
         };
 
         if (this.state.orderBy == columnIndex) {
-            if (this.state.order == 'asc') {
-                newState.order = 'desc';
+            if (this.state.order == firstOrder) {
+                newState.order = secondOrder;
             }
             else {
                 newState.orderBy = null;
@@ -105,7 +136,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                                 >
                                     <TableSortLabel
                                         active={this.state.orderBy == columnIndex}
-                                        direction={(this.state.orderBy == columnIndex) ? this.state.order : 'asc'}
+                                        direction={(this.state.orderBy == columnIndex) ? this.state.order : (this.props.columns[columnIndex].firstOrder || 'asc')}
                                         onClick={() => this.onTableSortLabelClick(columnIndex)}
                                     >
                                         {column.content}

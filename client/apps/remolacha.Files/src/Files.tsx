@@ -55,10 +55,21 @@ export class Files extends React.Component<FilesProps, FilesState> {
         ['u', 'help_center']
     ]);
 
-    private static readonly COLUMNS : Array<any> = [
+    private readonly COLUMNS : Array<any> = [
         {
             id: 'name',
-            content: 'Name'
+            content: 'Name',
+            descendingComparator: (aRowIndex: number, bRowIndex : number, columnIndex : number) : number => {
+                if (this.state.elements[aRowIndex].type != 'd' && this.state.elements[bRowIndex].type == 'd') {
+                    return -1;
+                }
+
+                if (this.state.elements[aRowIndex].type == 'd' && this.state.elements[bRowIndex].type != 'd') {
+                    return 1;
+                }
+
+                return remolacha.DataTable.genericDescendingComparator(this.state.elements[aRowIndex].name.toLowerCase(), this.state.elements[bRowIndex].name.toLowerCase());
+            }
         },
         {
             id: 'type',
@@ -66,15 +77,19 @@ export class Files extends React.Component<FilesProps, FilesState> {
         },
         {
             id: 'size',
-            content: 'Size'
+            content: 'Size',
+            firstOrder: 'desc',
+            descendingComparator: (aRowIndex: number, bRowIndex : number, columnIndex : number) : number => remolacha.DataTable.genericDescendingComparator(this.state.elements[aRowIndex].size, this.state.elements[bRowIndex].size)
         },
         {
             id: 'modified',
-            content: 'Modified'
+            content: 'Modified',
+            firstOrder: 'desc'
         },
         {
             id: 'mode',
-            content: 'Mode'
+            content: 'Mode',
+            descendingComparator: (aRowIndex: number, bRowIndex : number, columnIndex : number) : number => remolacha.DataTable.genericDescendingComparator(this.state.elements[aRowIndex].mode, this.state.elements[bRowIndex].mode)
         }
     ];
 
@@ -376,9 +391,10 @@ export class Files extends React.Component<FilesProps, FilesState> {
 
                 <remolacha.DataTable
                     className="remolacha_app_Files_fileList"
-                    columns={Files.COLUMNS}
+                    columns={this.COLUMNS}
                     rows={this.state.elements.map(x => this.renderRow(x))}
                     size="small"
+                    defaultOrderBy={0}
                     rowKey={(rowIndex : number) => this.state.elements[rowIndex].name}
                     rowSelected={(rowIndex : number) => this.state.selected.has(this.state.elements[rowIndex].name)}
                     onRowClick={(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) => this.onRowClick(rowIndex, e)}

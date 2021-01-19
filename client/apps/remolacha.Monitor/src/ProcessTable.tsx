@@ -34,11 +34,13 @@ export class ProcessTable extends React.Component<ProcessTableProps, ProcessTabl
         },
         {
             id: 'cpu',
-            content: 'CPU'
+            content: 'CPU',
+            firstOrder: 'desc'
         },
         {
             id: 'memory',
-            content: 'Memory'
+            content: 'Memory',
+            firstOrder: 'desc'
         },
         {
             id: 'pid',
