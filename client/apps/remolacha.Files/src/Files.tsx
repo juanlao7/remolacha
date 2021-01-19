@@ -15,6 +15,7 @@ interface FilesState {
     locationInputValue? : string;
     elements? : Array<any>;
     selected? : Map<string, number>;
+    lastSelected? : number;
     previousPaths? : Array<string>;
     nextPaths? : Array<string>;
     error? : any;
@@ -94,16 +95,19 @@ export class Files extends React.Component<FilesProps, FilesState> {
     ];
 
     private connection : any;
+    private dataTable : any;
 
     constructor(props: FilesProps) {
         super(props);
         this.connection = null;
+        this.dataTable = null;
 
         this.state = {
             currentPath: null,
             locationInputValue: '',
             elements: [],
             selected: new Map(),
+            lastSelected: null,
             previousPaths: [],
             nextPaths: [],
             error: null
@@ -214,23 +218,40 @@ export class Files extends React.Component<FilesProps, FilesState> {
         return prettyBytes(numbers.filter(x => (x != null)).reduce((a, b) => a + b, 0));
     }
 
-    private onRowClick(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) {
-        const name = this.state.elements[rowIndex].name;
+    private onRowMouseDown(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) {
+        if (!e.ctrlKey) {
+            this.state.selected.clear();
+        }
 
-        if (e.ctrlKey) {
-            if (this.state.selected.has(name)) {
-                this.state.selected.delete(name);
+        const newState : FilesState = {selected: this.state.selected};
+
+        if (e.shiftKey) {
+            let from = this.dataTable.getSortedRowIndex(this.state.lastSelected || this.dataTable.getOriginalRowIndex(0));
+            let to = this.dataTable.getSortedRowIndex(rowIndex);
+
+            if (to < from) {
+                [from, to] = [to, from];
             }
-            else {
-                this.state.selected.set(name, this.state.elements[rowIndex].size);
+
+            for (let i = from; i <= to; ++i) {
+                const originalI = this.dataTable.getOriginalRowIndex(i);
+                this.state.selected.set(this.state.elements[originalI].name, this.state.elements[originalI].size);
             }
+
+            e.preventDefault();     // To avoid text selection.
         }
         else {
-            this.state.selected.clear();
-            this.state.selected.set(name, this.state.elements[rowIndex].size);
+            newState.lastSelected = rowIndex;
+
+            if (e.ctrlKey && this.state.selected.has(this.state.elements[rowIndex].name)) {
+                this.state.selected.delete(this.state.elements[rowIndex].name);
+            }
+            else {
+                this.state.selected.set(this.state.elements[rowIndex].name, this.state.elements[rowIndex].size);
+            }
         }
 
-        this.setState({selected: this.state.selected});
+        this.setState(newState);
     }
 
     private onRowDoubleClick(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) {
@@ -397,8 +418,9 @@ export class Files extends React.Component<FilesProps, FilesState> {
                     defaultOrderBy={0}
                     rowKey={(rowIndex : number) => this.state.elements[rowIndex].name}
                     rowSelected={(rowIndex : number) => this.state.selected.has(this.state.elements[rowIndex].name)}
-                    onRowClick={(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) => this.onRowClick(rowIndex, e)}
+                    onRowMouseDown={(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) => this.onRowMouseDown(rowIndex, e)}
                     onRowDoubleClick={(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) => this.onRowDoubleClick(rowIndex, e)}
+                    ref={(x : any) => this.dataTable = x}
                 />
 
                 <AppBar className="remolacha_app_Files_statusBar" position="static">
