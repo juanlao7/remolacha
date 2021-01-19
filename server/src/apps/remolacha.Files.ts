@@ -76,25 +76,10 @@ async function getDirectoryElements(directoryPath : string) : Promise<Array<Dire
 }
 
 async function readDirectoryImpl(directoryPath : string, connection : Connection) {
-    let elements : Array<DirectoryElement> = [];
-    let error : any = null;
-
-    try {
-        elements = await getDirectoryElements(directoryPath);
-    }
-    catch (e) {
-        // We want to send the error, but first we want to update the UI with the resolved path.
-        error = e;
-    }
-    
     connection.send({
         path: directoryPath,
-        elements: elements
+        elements: await getDirectoryElements(directoryPath)
     });
-
-    if (error != null) {
-        throw error;
-    }
 }
 
 const app : App = {
@@ -113,27 +98,38 @@ const app : App = {
                 directoryPath = path.resolve(path.join(params.cwd, directoryPath));
             }
 
-            function onWatch() {
-                try {
-                    readDirectoryImpl(directoryPath, connection);
-                    watcher.close();
-                    startWatcher();
+            try {
+                function onWatch() {
+                    try {
+                        readDirectoryImpl(directoryPath, connection);
+                        watcher.close();
+                        startWatcher();
+                    }
+                    catch (e) {
+                        console.log(1);
+                        connection.fail(e.message);
+                        connection.close();
+                    }
                 }
-                catch (e) {
-                    connection.fail(e.message);
-                    connection.close();
+
+                function startWatcher() {
+                    watcher = fs.watch(directoryPath, onWatch);
                 }
+
+                let watcher : fs.FSWatcher;
+                startWatcher();
+                connection.events.once('close', () => watcher.close());
+
+                await readDirectoryImpl(directoryPath, connection);
             }
+            catch (e) {
+                connection.send({
+                    path: directoryPath,
+                    elements: []
+                });
 
-            function startWatcher() {
-                watcher = fs.watch(directoryPath, onWatch);
+                throw e;
             }
-
-            let watcher : fs.FSWatcher;
-            startWatcher();
-            connection.events.once('close', () => watcher.close());
-
-            readDirectoryImpl(directoryPath, connection);
         }
         catch (e) {
             connection.fail(e.message);
