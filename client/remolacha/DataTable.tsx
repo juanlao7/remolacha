@@ -25,6 +25,7 @@ interface DataTableProps {
     rowSelected? : (rowIndex : number) => boolean;
     onRowMouseDown? : (rowIndex : number, event : React.MouseEvent<HTMLTableRowElement, MouseEvent>) => void;
     onRowClick? : (rowIndex : number, event : React.MouseEvent<HTMLTableRowElement, MouseEvent>) => void;
+    onRowDoubleMouseDown? : (rowIndex : number, event : React.MouseEvent<HTMLTableRowElement, MouseEvent>) => void;
     onRowDoubleClick? : (rowIndex : number, event : React.MouseEvent<HTMLTableRowElement, MouseEvent>) => void;
 }
 
@@ -34,13 +35,19 @@ interface DataTableState {
 }
 
 export class DataTable extends React.Component<DataTableProps, DataTableState> {
+    private static readonly DOUBLE_MOUSE_DOWN_THRESHOLD = 400;
+
     private originalToSortedIndex : Map<number, number>;
     private sortedToOriginalIndex : Map<number, number>;
+    private lastMouseDownTimestamp : number;
+    private lastMouseDownRowIndex : number;
 
     constructor(props : DataTableProps) {
         super(props);
         this.originalToSortedIndex = null;
         this.sortedToOriginalIndex = null;
+        this.lastMouseDownTimestamp = 0;
+        this.lastMouseDownRowIndex = -1;
 
         this.state = {
             orderBy: this.props.defaultOrderBy,
@@ -141,6 +148,22 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
         this.setState(newState);
     }
 
+    private onRowMouseDown(rowIndex : number, event : React.MouseEvent<HTMLTableRowElement, MouseEvent>) {
+        if (this.props.onRowMouseDown) {
+            this.props.onRowMouseDown(rowIndex, event);
+        }
+
+        const now = Date.now();
+
+        if (this.props.onRowDoubleMouseDown && this.lastMouseDownRowIndex == rowIndex && now - this.lastMouseDownTimestamp < DataTable.DOUBLE_MOUSE_DOWN_THRESHOLD) {
+            this.props.onRowDoubleMouseDown(rowIndex, event);
+            this.lastMouseDownRowIndex = -1;
+        }
+
+        this.lastMouseDownTimestamp = now;
+        this.lastMouseDownRowIndex = rowIndex;
+    }
+
     render() {
         return (
             <TableContainer className={this.props.className}>
@@ -172,7 +195,7 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
                             key={(this.props.rowKey) ? this.props.rowKey(originalIndex) : null}
                             selected={(this.props.rowSelected) ? this.props.rowSelected(originalIndex) : false}
                             hover
-                            onMouseDown={e => this.props.onRowMouseDown && this.props.onRowMouseDown(originalIndex, e)}
+                            onMouseDown={e => this.onRowMouseDown(originalIndex, e)}
                             onClick={e => this.props.onRowClick && this.props.onRowClick(originalIndex, e)}
                             onDoubleClick={e => this.props.onRowDoubleClick && this.props.onRowDoubleClick(originalIndex, e)}
                         >

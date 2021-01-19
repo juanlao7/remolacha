@@ -254,7 +254,9 @@ export class Files extends React.Component<FilesProps, FilesState> {
         this.setState(newState);
     }
 
-    private onRowDoubleClick(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) {
+    private onRowDoubleMouseDown(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) {
+        e.preventDefault();     // To avoid text selection.
+
         if (this.state.elements[rowIndex].type == 'd') {
             const [parts, separator] = this.splitPath(this.state.currentPath);
 
@@ -423,7 +425,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
                     rowKey={(rowIndex : number) => this.state.elements[rowIndex].name}
                     rowSelected={(rowIndex : number) => this.state.selected.has(this.state.elements[rowIndex].name)}
                     onRowMouseDown={(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) => this.onRowMouseDown(rowIndex, e)}
-                    onRowDoubleClick={(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) => this.onRowDoubleClick(rowIndex, e)}
+                    onRowDoubleMouseDown={(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) => this.onRowDoubleMouseDown(rowIndex, e)}
                     ref={(x : any) => this.dataTable = x}
                 />
 
