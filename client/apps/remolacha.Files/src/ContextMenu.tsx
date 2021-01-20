@@ -11,7 +11,7 @@ interface ContextMenuProps {
     elements : Array<any>;
     selected : Map<string, number>;
     files : Files;
-    onClose? : () => void;
+    onClose : () => void;
 }
 
 interface ContextMenuState {
