@@ -1,9 +1,11 @@
 import React from 'react';
-import { ThemeProvider, AppBar, Toolbar, IconButton, Icon, InputBase, Typography, LinearProgress, Menu, MenuItem, ListItemIcon, Divider } from '@material-ui/core';
+import { ThemeProvider, Icon } from '@material-ui/core';
 import prettyBytes from 'pretty-bytes';
 import { DateTime } from 'luxon';
 import { TypeTools } from 'remolacha-commons';
 import { ContextMenu } from './ContextMenu';
+import { MainToolbar } from './MainToolbar';
+import { StatusBar } from './StatusBar';
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
@@ -123,7 +125,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
         };
     }
 
-    private splitPath(absolutePath : string) : [Array<string>, string] {
+    splitPath(absolutePath : string) : [Array<string>, string] {
         let separator = null;
 
         for (const character of absolutePath) {
@@ -231,27 +233,6 @@ export class Files extends React.Component<FilesProps, FilesState> {
         this.connection.open();
     }
 
-    private canGoBack() : boolean {
-        return (this.state.currentPath != null && this.state.previousPaths.length > 1);
-    }
-
-    private canGoForward() : boolean {
-        return (this.state.currentPath != null && this.state.nextPaths.length > 0);
-    }
-
-    private canGoUp() : boolean {
-        if (this.state.currentPath == null) {
-            return false;
-        }
-
-        const [parts] = this.splitPath(this.state.currentPath);
-        return (parts[parts.length - 1].length > 0);
-    }
-
-    private sumBytes(numbers : Array<number>) : string {
-        return prettyBytes(numbers.filter(x => (x != null)).reduce((a, b) => a + b, 0));
-    }
-
     private closeContextMenu() {
         this.setState({
             contextMenuMouseX: null,
@@ -271,39 +252,12 @@ export class Files extends React.Component<FilesProps, FilesState> {
         return null;
     }
 
-    private onBackButtonClick() {
-        this.state.nextPaths.push(this.state.previousPaths.pop());
-        this.readDirectory(this.state.previousPaths[this.state.previousPaths.length - 1], false);
-    }
-
-    private onForwardButtonClick() {
-        const directoryPath = this.state.nextPaths.pop();
-        this.readDirectory(directoryPath, false);
-    }
-
-    private onUpButtonClick() {
-        const [parts, separator] = this.splitPath(this.state.currentPath);
-        parts[parts.length - 1] = '';       // We do not remove the element because on Windows we want to go to "X:\", and not "X:".
-        this.readDirectory(parts.join(separator), true);
-    }
-
-    private onHomeButtonClick() {
-        this.readDirectory(null, true);
-    }
-
     private onLocationInputChange(e : React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
         this.setState({locationInputValue: e.target.value});
     }
 
     private onLocationInputBlur() {
         this.setState({locationInputValue: this.state.currentPath});
-    }
-
-    private onLocationInputKeyPress(e : React.KeyboardEvent<HTMLDivElement>) {
-        if (e.key == 'Enter') {
-            const input = e.target as HTMLInputElement;
-            this.readDirectory(input.value, true, input);
-        }
     }
 
     private onBackgroundMouseDown(e : React.MouseEvent<HTMLDivElement, MouseEvent>) {
@@ -442,61 +396,15 @@ export class Files extends React.Component<FilesProps, FilesState> {
     render() {
         return (
             <ThemeProvider theme={remolacha.theme}>
-                <AppBar position="static">
-                    <Toolbar
-                        className="remolacha_app_Files_toolbar"
-                        variant="dense"
-                        disableGutters
-                    >
-                        <IconButton
-                            title="Back"
-                            color="inherit"
-                            edge="start"
-                            disabled={!this.canGoBack()}
-                            onClick={() => this.onBackButtonClick()}
-                        >
-                            <Icon>arrow_back</Icon>
-                        </IconButton>
-
-                        <IconButton
-                            title="Forward"
-                            color="inherit"
-                            disabled={!this.canGoForward()}
-                            onClick={() => this.onForwardButtonClick()}
-                        >
-                            <Icon>arrow_forward</Icon>
-                        </IconButton>
-
-                        <IconButton
-                            title="Go up"
-                            color="inherit"
-                            disabled={!this.canGoUp()}
-                            onClick={() => this.onUpButtonClick()}
-                        >
-                            <Icon>arrow_upward</Icon>
-                        </IconButton>
-
-                        <IconButton
-                            title="Go to home directory"
-                            color="inherit"
-                            disabled={this.state.currentPath == null}
-                            onClick={() => this.onHomeButtonClick()}
-                        >
-                            <Icon>home</Icon>
-                        </IconButton>
-
-                        <InputBase
-                            className="remolacha_app_Files_locationInput"
-                            placeholder="Location"
-                            spellCheck="false"
-                            value={this.state.locationInputValue}
-                            disabled={this.state.currentPath == null}
-                            onChange={e => this.onLocationInputChange(e)}
-                            onBlur={() => this.onLocationInputBlur()}
-                            onKeyPress={e => this.onLocationInputKeyPress(e)}
-                        />
-                    </Toolbar>
-                </AppBar>
+                <MainToolbar
+                    currentPath={this.state.currentPath}
+                    locationInputValue={this.state.locationInputValue}
+                    previousPaths={this.state.previousPaths}
+                    nextPaths={this.state.nextPaths}
+                    files={this}
+                    onLocationInputChange={e => this.onLocationInputChange(e)}
+                    onLocationInputBlur={() => this.onLocationInputBlur()}
+                />
 
                 <div
                     className="remolacha_app_Files_background"
@@ -527,25 +435,12 @@ export class Files extends React.Component<FilesProps, FilesState> {
                     />
                 </div>
 
-                <AppBar className="remolacha_app_Files_statusBar" position="static">
-                    <Toolbar variant="dense">
-                        <Typography variant="body1" color="inherit">
-                            {(this.state.error == null) ?
-                                (this.state.currentPath == null) ?
-                                    'Loading...'
-                                :
-                                    (this.state.selected.size == 0) ?
-                                        `${this.state.elements.length} element${(this.state.elements.length != 1) ? 's' : ''}, ${this.sumBytes(this.state.elements.map(x => x.size))}`
-                                    :
-                                        `${this.state.selected.size} element${(this.state.selected.size != 1) ? 's' : ''} selected, ${this.sumBytes([...this.state.selected.values()])}`
-                            :
-                                this.state.error}
-                        </Typography>
-                    </Toolbar>
-
-                    {this.state.currentPath == null &&
-                    <LinearProgress className="remolacha_app_Files_progressBar" color="secondary" />}
-                </AppBar>
+                <StatusBar
+                    currentPath={this.state.currentPath}
+                    elements={this.state.elements}
+                    selected={this.state.selected}
+                    error={this.state.error}
+                />
             </ThemeProvider>
         );
     }
