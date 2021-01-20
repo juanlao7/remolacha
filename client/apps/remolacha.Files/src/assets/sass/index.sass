@@ -20,28 +20,34 @@
             &:hover
                 background-color: rgba(#fff, 0.25)
 
-    .remolacha_app_Files_fileList
+    .remolacha_app_Files_background
         flex-grow: 1
-        white-space: nowrap
+        overflow: auto
 
-        .material-icons
-            vertical-align: middle
-            margin-right: 8px
+        .remolacha_app_Files_fileList
+            margin: 0 24px 24px
+            display: inline-block
+            width: auto
+            white-space: nowrap
 
-        .remolacha_app_Files_type_f,
-        .remolacha_app_Files_type_p,
-        .remolacha_app_Files_type_s,
-        .remolacha_app_Files_type_c,
-        .remolacha_app_Files_type_b,
-        .remolacha_app_Files_type_u
             .material-icons
-                color: #aaa
-        
-        .remolacha_app_Files_symbolicLink
-            font-style: italic
-        
-        .remolacha_app_Files_modeCell
-            font-family: Roboto Mono
+                vertical-align: middle
+                margin-right: 8px
+
+            .remolacha_app_Files_type_f,
+            .remolacha_app_Files_type_p,
+            .remolacha_app_Files_type_s,
+            .remolacha_app_Files_type_c,
+            .remolacha_app_Files_type_b,
+            .remolacha_app_Files_type_u
+                .material-icons
+                    color: #aaa
+            
+            .remolacha_app_Files_symbolicLink
+                font-style: italic
+            
+            .remolacha_app_Files_modeCell
+                font-family: Roboto Mono
 
     .remolacha_app_Files_statusBar p
         pointer-events: none

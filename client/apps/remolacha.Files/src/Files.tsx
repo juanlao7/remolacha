@@ -1,5 +1,5 @@
 import React from 'react';
-import { ThemeProvider, AppBar, Toolbar, IconButton, Icon, InputBase, Typography, LinearProgress } from '@material-ui/core';
+import { ThemeProvider, AppBar, Toolbar, IconButton, Icon, InputBase, Typography, LinearProgress, Menu, MenuItem, ListItemIcon, Divider } from '@material-ui/core';
 import prettyBytes from 'pretty-bytes';
 import { DateTime } from 'luxon';
 
@@ -19,6 +19,8 @@ interface FilesState {
     previousPaths? : Array<string>;
     nextPaths? : Array<string>;
     error? : any;
+    contextMenuMouseX? : number;
+    contextMenuMouseY? : number;
 }
 
 export class Files extends React.Component<FilesProps, FilesState> {
@@ -110,7 +112,9 @@ export class Files extends React.Component<FilesProps, FilesState> {
             lastSelected: null,
             previousPaths: [],
             nextPaths: [],
-            error: null
+            error: null,
+            contextMenuMouseX: null,
+            contextMenuMouseY: null
         };
     }
 
@@ -218,8 +222,72 @@ export class Files extends React.Component<FilesProps, FilesState> {
         return prettyBytes(numbers.filter(x => (x != null)).reduce((a, b) => a + b, 0));
     }
 
+    private onBackButtonClick() {
+        this.state.nextPaths.push(this.state.previousPaths.pop());
+        this.readDirectory(this.state.previousPaths[this.state.previousPaths.length - 1], false);
+    }
+
+    private onForwardButtonClick() {
+        const directoryPath = this.state.nextPaths.pop();
+        this.readDirectory(directoryPath, false);
+    }
+
+    private onUpButtonClick() {
+        const [parts, separator] = this.splitPath(this.state.currentPath);
+        parts[parts.length - 1] = '';       // We do not remove the element because on Windows we want to go to "X:\", and not "X:".
+        this.readDirectory(parts.join(separator), true);
+    }
+
+    private onHomeButtonClick() {
+        this.readDirectory(null, true);
+    }
+
+    private onLocationInputChange(e : React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
+        this.setState({locationInputValue: e.target.value});
+    }
+
+    private onLocationInputBlur() {
+        if (this.state.currentPath != null) {
+            this.setState({locationInputValue: this.state.currentPath});
+        }
+    }
+
+    private onLocationInputKeyPress(e : React.KeyboardEvent<HTMLDivElement>) {
+        if (e.key == 'Enter') {
+            const input = e.target as HTMLInputElement;
+            this.readDirectory(input.value, true, input);
+        }
+    }
+
+    private onBackgroundMouseDown(e : React.MouseEvent<HTMLDivElement, MouseEvent>) {
+        if (e.target != e.currentTarget || e.ctrlKey) {
+            return;
+        }
+
+        this.setState({
+            selected: new Map(),
+            lastSelected: null
+        });
+    }
+
+    private onBackgroundContextMenu(e : React.MouseEvent<HTMLDivElement, MouseEvent>) {
+        e.preventDefault();
+
+        this.setState({
+            contextMenuMouseX: e.clientX - 2,
+            contextMenuMouseY: e.clientY - 4
+        });
+    }
+
     private onRowMouseDown(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) {
-        if (!e.ctrlKey) {
+        if (e.button != 0 && e.ctrlKey) {
+            // No effect.
+            return;
+        }
+
+        const name = this.state.elements[rowIndex].name;
+
+        if (!e.ctrlKey && (e.button == 0 || !this.state.selected.has(name))) {
             this.state.selected.clear();
         }
 
@@ -243,11 +311,11 @@ export class Files extends React.Component<FilesProps, FilesState> {
         else {
             newState.lastSelected = rowIndex;
 
-            if (e.ctrlKey && this.state.selected.has(this.state.elements[rowIndex].name)) {
-                this.state.selected.delete(this.state.elements[rowIndex].name);
+            if (e.ctrlKey && this.state.selected.has(name)) {
+                this.state.selected.delete(name);
             }
             else {
-                this.state.selected.set(this.state.elements[rowIndex].name, this.state.elements[rowIndex].size);
+                this.state.selected.set(name, this.state.elements[rowIndex].size);
             }
         }
 
@@ -276,41 +344,11 @@ export class Files extends React.Component<FilesProps, FilesState> {
         }
     }
 
-    private onLocationInputChange(e : React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
-        this.setState({locationInputValue: e.target.value});
-    }
-
-    private onLocationInputBlur() {
-        if (this.state.currentPath != null) {
-            this.setState({locationInputValue: this.state.currentPath});
-        }
-    }
-
-    private onLocationInputKeyPress(e : React.KeyboardEvent<HTMLDivElement>) {
-        if (e.key == 'Enter') {
-            const input = e.target as HTMLInputElement;
-            this.readDirectory(input.value, true, input);
-        }
-    }
-
-    private onBackButtonClick() {
-        this.state.nextPaths.push(this.state.previousPaths.pop());
-        this.readDirectory(this.state.previousPaths[this.state.previousPaths.length - 1], false);
-    }
-
-    private onForwardButtonClick() {
-        const directoryPath = this.state.nextPaths.pop();
-        this.readDirectory(directoryPath, false);
-    }
-
-    private onUpButtonClick() {
-        const [parts, separator] = this.splitPath(this.state.currentPath);
-        parts[parts.length - 1] = '';       // We do not remove the element because on Windows we want to go to "X:\", and not "X:".
-        this.readDirectory(parts.join(separator), true);
-    }
-
-    private onHomeButtonClick() {
-        this.readDirectory(null, true);
+    private onContextMenuClose() {
+        this.setState({
+            contextMenuMouseX: null,
+            contextMenuMouseY: null
+        });
     }
 
     componentDidMount() {
@@ -420,18 +458,86 @@ export class Files extends React.Component<FilesProps, FilesState> {
                     </Toolbar>
                 </AppBar>
 
-                <remolacha.DataTable
-                    className="remolacha_app_Files_fileList"
-                    columns={this.COLUMNS}
-                    rows={this.state.elements.map(x => this.renderRow(x))}
-                    size="small"
-                    defaultOrderBy={0}
-                    rowKey={(rowIndex : number) => this.state.elements[rowIndex].name}
-                    rowSelected={(rowIndex : number) => this.state.selected.has(this.state.elements[rowIndex].name)}
-                    onRowMouseDown={(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) => this.onRowMouseDown(rowIndex, e)}
-                    onRowDoubleMouseDown={(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) => this.onRowDoubleMouseDown(rowIndex, e)}
-                    ref={(x : any) => this.dataTable = x}
-                />
+                <div
+                    className="remolacha_app_Files_background"
+                    onMouseDown={e => this.onBackgroundMouseDown(e)}
+                    onContextMenu={e => this.onBackgroundContextMenu(e)}
+                >
+                    <remolacha.DataTable
+                        className="remolacha_app_Files_fileList"
+                        columns={this.COLUMNS}
+                        rows={this.state.elements.map(x => this.renderRow(x))}
+                        size="small"
+                        defaultOrderBy={0}
+                        rowKey={(rowIndex : number) => this.state.elements[rowIndex].name}
+                        rowSelected={(rowIndex : number) => this.state.selected.has(this.state.elements[rowIndex].name)}
+                        onRowMouseDown={(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) => this.onRowMouseDown(rowIndex, e)}
+                        onRowDoubleMouseDown={(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) => this.onRowDoubleMouseDown(rowIndex, e)}
+                        ref={(x : any) => this.dataTable = x}
+                    />
+
+                    <Menu
+                        anchorReference="anchorPosition"
+                        anchorPosition={(this.state.contextMenuMouseX != null) ? {
+                            left: this.state.contextMenuMouseX,
+                            top: this.state.contextMenuMouseY
+                        } : undefined}
+                        keepMounted
+                        open={this.state.contextMenuMouseX != null}
+                        onClose={() => this.onContextMenuClose()}
+                    >
+                        {this.state.selected.size == 0 &&
+                        <MenuItem>
+                            New file
+                        </MenuItem>}
+
+                        {this.state.selected.size == 0 &&
+                        <MenuItem>
+                            New directory
+                        </MenuItem>}
+
+                        {this.state.selected.size == 1 &&
+                        <MenuItem>
+                            Open
+                        </MenuItem>}
+
+                        {this.state.selected.size > 1 &&
+                        <MenuItem>
+                            Open all
+                        </MenuItem>}
+
+                        {(this.state.selected.size > 0 || true) &&
+                        <Divider className="remolacha_dividerWithMargin" />}
+
+                        {this.state.selected.size > 0 &&
+                        <MenuItem>
+                            Cut
+                        </MenuItem>}
+
+                        {this.state.selected.size > 0 &&
+                        <MenuItem>
+                            Copy
+                        </MenuItem>}
+
+                        {(this.state.selected.size == 0 && true) &&
+                        <MenuItem>
+                            Paste
+                        </MenuItem>}
+
+                        {this.state.selected.size > 0 &&
+                        <Divider className="remolacha_dividerWithMargin" />}
+
+                        {this.state.selected.size > 0 &&
+                        <MenuItem>
+                            Delete
+                        </MenuItem>}
+
+                        {this.state.selected.size == 1 &&
+                        <MenuItem>
+                            Rename
+                        </MenuItem>}
+                    </Menu>
+                </div>
 
                 <AppBar className="remolacha_app_Files_statusBar" position="static">
                     <Toolbar variant="dense">
@@ -450,8 +556,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
                     </Toolbar>
 
                     {this.state.currentPath == null &&
-                    <LinearProgress className="remolacha_app_Files_progressBar" color="secondary" />
-                    }
+                    <LinearProgress className="remolacha_app_Files_progressBar" color="secondary" />}
                 </AppBar>
             </ThemeProvider>
         );
