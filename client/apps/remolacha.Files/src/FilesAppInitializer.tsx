@@ -30,6 +30,6 @@ export class FilesAppInitializer {
             appInstance.addWindow(window)
         ]);
 
-        ReactDOM.render(<Files appInstance={appInstance} window={window} />, content);
+        ReactDOM.render(<Files appInstance={appInstance} window={window} params={params} />, content);
     }
 }

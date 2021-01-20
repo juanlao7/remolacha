@@ -1,3 +1,4 @@
+import { TypeTools } from 'remolacha-commons';
 import { Terminal } from 'xterm';
 import { FitAddon } from 'xterm-addon-fit';
 
@@ -43,9 +44,12 @@ export class TerminalAppInitializer {
         window.events.on('resize', () => fitAddon.fit());
         window.events.on('focus', () => term.focus());
 
+        const cwd : string = params.get('cwd');
+
         const connection = appInstance.createBackendConnection('shell', {
             columns: term.cols,
-            rows: term.rows
+            rows: term.rows,
+            cwd: (TypeTools.isString(cwd)) ? cwd : null
         });
 
         connection.events.on('data', (emitter : any, data : any) => term.write(data));

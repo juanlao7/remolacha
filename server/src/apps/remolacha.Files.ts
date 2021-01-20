@@ -2,6 +2,7 @@ import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
 import { promisify } from 'util';
+import { TypeTools } from 'remolacha-commons';
 import { App } from '../App';
 import { Connection } from '../Connection';
 
@@ -85,7 +86,7 @@ async function readDirectoryImpl(directoryPath : string, connection : Connection
 const app : App = {
     readDirectory: async (params : any, connection : Connection) => {
         try {
-            if (params == null || typeof params != 'object' || !('goHome' in params || typeof params.path == 'string' || params.path instanceof String)) {
+            if (params == null || typeof params != 'object' || !('goHome' in params || TypeTools.isString(params.path))) {
                 throw new Error('Unexpected params.');
             }
 

@@ -1,5 +1,6 @@
 import fkill from 'fkill';
 import os from 'os';
+import { TypeTools } from 'remolacha-commons';
 import { App } from '../App';
 import { Connection } from '../Connection';
 
@@ -9,6 +10,7 @@ const app : App = {
     shell: async (params : any, connection : Connection) => {
         let columns = 80;
         let rows = 30;
+        let cwd : string = null;
 
         if (params != null && typeof params == 'object') {
             if (Number.isInteger(params.columns)) {
@@ -18,13 +20,18 @@ const app : App = {
             if (Number.isInteger(params.rows)) {
                 rows = params.rows;
             }
+
+            if (TypeTools.isString(params.cwd)) {
+                cwd = params.cwd;
+            }
         }
 
         const shell = (os.platform() == 'win32') ? 'powershell.exe' : 'bash';      // TODO: load the configured default shell.
+        console.log(cwd);
 
         const term = pty.spawn(shell, [], {
             name: 'xterm-color',
-            cwd: process.env.HOME,
+            cwd: (cwd == null) ? os.homedir() : cwd,
             env: process.env,
             cols: columns,
             rows: rows

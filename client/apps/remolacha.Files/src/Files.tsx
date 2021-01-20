@@ -2,16 +2,19 @@ import React from 'react';
 import { ThemeProvider, AppBar, Toolbar, IconButton, Icon, InputBase, Typography, LinearProgress, Menu, MenuItem, ListItemIcon, Divider } from '@material-ui/core';
 import prettyBytes from 'pretty-bytes';
 import { DateTime } from 'luxon';
+import { TypeTools } from 'remolacha-commons';
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
 interface FilesProps {
     appInstance : any;
     window : any;        // TODO: type remolacha.Window
+    params : Map<string, any>;
 }
 
 interface FilesState {
     currentPath? : string;
+    currentPathIsValid? : boolean;
     locationInputValue? : string;
     elements? : Array<any>;
     selected? : Map<string, number>;
@@ -106,6 +109,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
 
         this.state = {
             currentPath: null,
+            currentPathIsValid: false,
             locationInputValue: '',
             elements: [],
             selected: new Map(),
@@ -131,6 +135,20 @@ export class Files extends React.Component<FilesProps, FilesState> {
         return [absolutePath.split(separator), separator];
     }
 
+    private resolvePath(relativePath : string) {
+        const [parts, separator] = this.splitPath(this.state.currentPath);
+
+        if (parts[parts.length - 1].length == 0) {
+            // This happens only when the current path is the root ("/" or "X:\").
+            parts[parts.length - 1] = relativePath;
+        }
+        else {
+            parts.push(relativePath);
+        }
+
+        return parts.join(separator);
+    }
+
     private readDirectory(directoryPath : string, deleteNextPaths : boolean, input : HTMLInputElement = null) {
         if (this.connection != null) {
             this.connection.close();
@@ -138,9 +156,12 @@ export class Files extends React.Component<FilesProps, FilesState> {
 
         const newState : FilesState = {
             currentPath: null,
+            currentPathIsValid: false,
             elements: [],
             selected: new Map(),
-            error: null
+            error: null,
+            contextMenuMouseX: null,
+            contextMenuMouseY: null
         };
 
         if (deleteNextPaths) {
@@ -166,7 +187,10 @@ export class Files extends React.Component<FilesProps, FilesState> {
                 input.select();
             }
 
-            this.setState({error: error});
+            this.setState({
+                currentPathIsValid: false,
+                error: error
+            });
         });
 
         this.connection.events.on('data', (emitter : any, data : any) => {
@@ -176,6 +200,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
 
             const newState : FilesState = {
                 currentPath: data.path,
+                currentPathIsValid: true,
                 locationInputValue: data.path,
                 elements: data.elements,
                 error: null
@@ -222,6 +247,25 @@ export class Files extends React.Component<FilesProps, FilesState> {
         return prettyBytes(numbers.filter(x => (x != null)).reduce((a, b) => a + b, 0));
     }
 
+    private closeContextMenu() {
+        this.setState({
+            contextMenuMouseX: null,
+            contextMenuMouseY: null
+        });
+    }
+
+    private getElementByName(name : string) : any {
+        // TODO: store elements in a Map for reducing the complexity of this method from linear to constant.
+
+        for (const element of this.state.elements) {
+            if (element.name == name) {
+                return element;
+            }
+        }
+
+        return null;
+    }
+
     private onBackButtonClick() {
         this.state.nextPaths.push(this.state.previousPaths.pop());
         this.readDirectory(this.state.previousPaths[this.state.previousPaths.length - 1], false);
@@ -247,9 +291,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
     }
 
     private onLocationInputBlur() {
-        if (this.state.currentPath != null) {
-            this.setState({locationInputValue: this.state.currentPath});
-        }
+        this.setState({locationInputValue: this.state.currentPath});
     }
 
     private onLocationInputKeyPress(e : React.KeyboardEvent<HTMLDivElement>) {
@@ -272,6 +314,11 @@ export class Files extends React.Component<FilesProps, FilesState> {
 
     private onBackgroundContextMenu(e : React.MouseEvent<HTMLDivElement, MouseEvent>) {
         e.preventDefault();
+
+        if (this.state.contextMenuMouseX != null) {
+            // To avoid opening the same menu somewhere else.
+            return;
+        }
 
         this.setState({
             contextMenuMouseX: e.clientX - 2,
@@ -330,29 +377,45 @@ export class Files extends React.Component<FilesProps, FilesState> {
         e.preventDefault();     // To avoid text selection.
 
         if (this.state.elements[rowIndex].type == 'd') {
-            const [parts, separator] = this.splitPath(this.state.currentPath);
-
-            if (parts[parts.length - 1].length == 0) {
-                // This happens only when the current path is the root ("/" or "X:\").
-                parts[parts.length - 1] = this.state.elements[rowIndex].name;
-            }
-            else {
-                parts.push(this.state.elements[rowIndex].name);
-            }
-
-            this.readDirectory(parts.join(separator), true);
+            this.readDirectory(this.resolvePath(this.state.elements[rowIndex].name), true);
         }
     }
 
     private onContextMenuClose() {
-        this.setState({
-            contextMenuMouseX: null,
-            contextMenuMouseY: null
-        });
+        this.closeContextMenu();
+    }
+
+    private onNewFileMenuItemClick() {
+        this.closeContextMenu();
+    }
+
+    private onOpenFileMenuItemClick() {
+        this.closeContextMenu();
+        const name = this.state.selected.keys().next().value;
+        const element = this.getElementByName(name);
+
+        if (element.type == 'd') {
+            this.readDirectory(this.resolvePath(name), true);
+        }
+        else {
+            // TODO: open with text editor.
+        }
+    }
+
+    private onOpenInNewWindowMenuItemClick() {
+        this.closeContextMenu();
+        const path = this.resolvePath(this.state.selected.keys().next().value);
+        remolacha.Environment.getInstance().openApp('remolacha.Files', new Map([['cwd', path]]));
+    }
+
+    private onOpenTerminalMenuItemClick() {
+        this.closeContextMenu();
+        remolacha.Environment.getInstance().openApp('remolacha.Terminal', new Map([['cwd', this.state.currentPath]]));
     }
 
     componentDidMount() {
-        this.readDirectory(null, false);
+        const path : string = this.props.params.get('cwd');
+        this.readDirectory((TypeTools.isString(path)) ? path : null, false);
     }
 
     private renderRow(element : any) {
@@ -483,11 +546,11 @@ export class Files extends React.Component<FilesProps, FilesState> {
                             top: this.state.contextMenuMouseY
                         } : undefined}
                         keepMounted
-                        open={this.state.contextMenuMouseX != null}
+                        open={this.state.currentPathIsValid && this.state.contextMenuMouseX != null}
                         onClose={() => this.onContextMenuClose()}
                     >
                         {this.state.selected.size == 0 &&
-                        <MenuItem>
+                        <MenuItem onClick={() => this.onNewFileMenuItemClick()}>
                             New file
                         </MenuItem>}
 
@@ -497,13 +560,18 @@ export class Files extends React.Component<FilesProps, FilesState> {
                         </MenuItem>}
 
                         {this.state.selected.size == 1 &&
-                        <MenuItem>
+                        <MenuItem onClick={() => this.onOpenFileMenuItemClick()}>
                             Open
+                        </MenuItem>}
+
+                        {(this.state.selected.size == 1 && this.getElementByName(this.state.selected.keys().next().value).type == 'd') &&
+                        <MenuItem onClick={() => this.onOpenInNewWindowMenuItemClick()}>
+                            Open in new window
                         </MenuItem>}
 
                         {this.state.selected.size > 1 &&
                         <MenuItem>
-                            Open all
+                            Open all selected
                         </MenuItem>}
 
                         {(this.state.selected.size > 0 || true) &&
@@ -535,6 +603,14 @@ export class Files extends React.Component<FilesProps, FilesState> {
                         {this.state.selected.size == 1 &&
                         <MenuItem>
                             Rename
+                        </MenuItem>}
+
+                        {this.state.selected.size == 0 &&
+                        <Divider className="remolacha_dividerWithMargin" />}
+
+                        {this.state.selected.size == 0 &&
+                        <MenuItem onClick={() => this.onOpenTerminalMenuItemClick()}>
+                            Open Terminal here
                         </MenuItem>}
                     </Menu>
                 </div>
