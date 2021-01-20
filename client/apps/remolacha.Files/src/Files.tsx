@@ -3,6 +3,7 @@ import { ThemeProvider, AppBar, Toolbar, IconButton, Icon, InputBase, Typography
 import prettyBytes from 'pretty-bytes';
 import { DateTime } from 'luxon';
 import { TypeTools } from 'remolacha-commons';
+import { ContextMenu } from './ContextMenu';
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
@@ -102,7 +103,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
     private connection : any;
     private dataTable : any;
 
-    constructor(props: FilesProps) {
+    constructor(props : FilesProps) {
         super(props);
         this.connection = null;
         this.dataTable = null;
@@ -135,7 +136,11 @@ export class Files extends React.Component<FilesProps, FilesState> {
         return [absolutePath.split(separator), separator];
     }
 
-    private resolvePath(relativePath : string) {
+    getCurrentPath() : string {
+        return this.state.currentPath;
+    }
+
+    resolvePath(relativePath : string) {
         const [parts, separator] = this.splitPath(this.state.currentPath);
 
         if (parts[parts.length - 1].length == 0) {
@@ -149,7 +154,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
         return parts.join(separator);
     }
 
-    private readDirectory(directoryPath : string, deleteNextPaths : boolean, input : HTMLInputElement = null) {
+    readDirectory(directoryPath : string, deleteNextPaths : boolean, input : HTMLInputElement = null) {
         if (this.connection != null) {
             this.connection.close();
         }
@@ -254,7 +259,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
         });
     }
 
-    private getElementByName(name : string) : any {
+    getElementByName(name : string) : any {
         // TODO: store elements in a Map for reducing the complexity of this method from linear to constant.
 
         for (const element of this.state.elements) {
@@ -385,34 +390,6 @@ export class Files extends React.Component<FilesProps, FilesState> {
         this.closeContextMenu();
     }
 
-    private onNewFileMenuItemClick() {
-        this.closeContextMenu();
-    }
-
-    private onOpenFileMenuItemClick() {
-        this.closeContextMenu();
-        const name = this.state.selected.keys().next().value;
-        const element = this.getElementByName(name);
-
-        if (element.type == 'd') {
-            this.readDirectory(this.resolvePath(name), true);
-        }
-        else {
-            // TODO: open with text editor.
-        }
-    }
-
-    private onOpenInNewWindowMenuItemClick() {
-        this.closeContextMenu();
-        const path = this.resolvePath(this.state.selected.keys().next().value);
-        remolacha.Environment.getInstance().openApp('remolacha.Files', new Map([['cwd', path]]));
-    }
-
-    private onOpenTerminalMenuItemClick() {
-        this.closeContextMenu();
-        remolacha.Environment.getInstance().openApp('remolacha.Terminal', new Map([['cwd', this.state.currentPath]]));
-    }
-
     componentDidMount() {
         const path : string = this.props.params.get('cwd');
         this.readDirectory((TypeTools.isString(path)) ? path : null, false);
@@ -539,80 +516,15 @@ export class Files extends React.Component<FilesProps, FilesState> {
                         ref={(x : any) => this.dataTable = x}
                     />
 
-                    <Menu
-                        anchorReference="anchorPosition"
-                        anchorPosition={(this.state.contextMenuMouseX != null) ? {
-                            left: this.state.contextMenuMouseX,
-                            top: this.state.contextMenuMouseY
-                        } : undefined}
-                        keepMounted
-                        open={this.state.currentPathIsValid && this.state.contextMenuMouseX != null}
+                    <ContextMenu
+                        open={this.state.currentPathIsValid}
+                        x={this.state.contextMenuMouseX}
+                        y={this.state.contextMenuMouseY}
+                        elements={this.state.elements}
+                        selected={this.state.selected}
+                        files={this}
                         onClose={() => this.onContextMenuClose()}
-                    >
-                        {this.state.selected.size == 0 &&
-                        <MenuItem onClick={() => this.onNewFileMenuItemClick()}>
-                            New file
-                        </MenuItem>}
-
-                        {this.state.selected.size == 0 &&
-                        <MenuItem>
-                            New directory
-                        </MenuItem>}
-
-                        {this.state.selected.size == 1 &&
-                        <MenuItem onClick={() => this.onOpenFileMenuItemClick()}>
-                            Open
-                        </MenuItem>}
-
-                        {(this.state.selected.size == 1 && this.getElementByName(this.state.selected.keys().next().value).type == 'd') &&
-                        <MenuItem onClick={() => this.onOpenInNewWindowMenuItemClick()}>
-                            Open in new window
-                        </MenuItem>}
-
-                        {this.state.selected.size > 1 &&
-                        <MenuItem>
-                            Open all selected
-                        </MenuItem>}
-
-                        {(this.state.selected.size > 0 || true) &&
-                        <Divider className="remolacha_dividerWithMargin" />}
-
-                        {this.state.selected.size > 0 &&
-                        <MenuItem>
-                            Cut
-                        </MenuItem>}
-
-                        {this.state.selected.size > 0 &&
-                        <MenuItem>
-                            Copy
-                        </MenuItem>}
-
-                        {(this.state.selected.size == 0 && true) &&
-                        <MenuItem>
-                            Paste
-                        </MenuItem>}
-
-                        {this.state.selected.size > 0 &&
-                        <Divider className="remolacha_dividerWithMargin" />}
-
-                        {this.state.selected.size > 0 &&
-                        <MenuItem>
-                            Delete
-                        </MenuItem>}
-
-                        {this.state.selected.size == 1 &&
-                        <MenuItem>
-                            Rename
-                        </MenuItem>}
-
-                        {this.state.selected.size == 0 &&
-                        <Divider className="remolacha_dividerWithMargin" />}
-
-                        {this.state.selected.size == 0 &&
-                        <MenuItem onClick={() => this.onOpenTerminalMenuItemClick()}>
-                            Open Terminal here
-                        </MenuItem>}
-                    </Menu>
+                    />
                 </div>
 
                 <AppBar className="remolacha_app_Files_statusBar" position="static">
