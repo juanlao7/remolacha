@@ -255,6 +255,10 @@ export class Files extends React.Component<FilesProps, FilesState> {
     }
 
     private onRowDoubleMouseDown(rowIndex : number, e : React.MouseEvent<HTMLTableRowElement, MouseEvent>) {
+        if (e.button != 0) {
+            return;
+        }
+
         e.preventDefault();     // To avoid text selection.
 
         if (this.state.elements[rowIndex].type == 'd') {
