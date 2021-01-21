@@ -46,9 +46,14 @@ export class ContextMenu extends React.Component<ContextMenuProps, ContextMenuSt
         remolacha.Environment.getInstance().openApp('remolacha.Files', new Map([['cwd', path]]));
     }
 
+    private onDeleteMenuItemClick() {
+        this.props.onClose();
+        this.props.files.openDeleteDialog();
+    }
+
     private onRenameMenuItemClick() {
         this.props.onClose();
-        this.props.files.openRenameDialog(this.props.selected.keys().next().value);
+        this.props.files.openRenameDialog();
     }
 
     private onOpenTerminalMenuItemClick() {
@@ -115,7 +120,7 @@ export class ContextMenu extends React.Component<ContextMenuProps, ContextMenuSt
                 <Divider className="remolacha_dividerWithMargin" />}
 
                 {this.props.selected.size > 0 &&
-                <MenuItem>
+                <MenuItem onClick={() => this.onDeleteMenuItemClick()}>
                     Delete
                 </MenuItem>}
 

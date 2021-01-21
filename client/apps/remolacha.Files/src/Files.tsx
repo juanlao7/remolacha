@@ -7,6 +7,7 @@ import { FileList } from './FileList';
 import { RenameDialog } from './RenameDialog';
 import { OverwriteDialog } from './OverwriteDialog';
 import { ErrorDialog } from './ErrorDialog';
+import { DeleteDialog } from './DeleteDialog';
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
@@ -26,6 +27,7 @@ interface FilesState {
     nextPaths? : Array<string>;
     error? : any;
     dialogError? : string;
+    deleteNames? : Array<string>;
     renameName? : string;
     overwriteName? : string;
     dialogLoading? : boolean;
@@ -53,13 +55,6 @@ export class Files extends React.Component<FilesProps, FilesState> {
             dialogLoading: false,
             onOverwriteDialogClose: null
         };
-    }
-
-    private async rename(originalName : string, newName : string) {
-        await this.props.appInstance.callBackend('move', {
-            from: this.resolvePath(originalName),
-            to: this.resolvePath(newName)
-        });
     }
 
     splitPath(absolutePath : string) : [Array<string>, string] {
@@ -193,8 +188,12 @@ export class Files extends React.Component<FilesProps, FilesState> {
         this.setState({selected: selected});
     }
 
-    openRenameDialog(elementName : string) {
-        this.setState({renameName: elementName});
+    openDeleteDialog() {
+        this.setState({deleteNames: [...this.state.selected.keys()]});
+    }
+
+    openRenameDialog() {
+        this.setState({renameName: this.state.selected.keys().next().value});
     }
 
     private onLocationInputChange(e : React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
@@ -205,9 +204,33 @@ export class Files extends React.Component<FilesProps, FilesState> {
         this.setState({locationInputValue: this.state.currentPath});
     }
 
+    private async onDeleteDialogClose(deleteConfirmed : boolean) {
+        if (!deleteConfirmed) {
+            this.setState({deleteNames: null});
+            return;
+        }
+
+        this.setState({dialogLoading: true});
+
+        try {
+            await this.props.appInstance.callBackend('delete', {paths: this.state.deleteNames.map(x => this.resolvePath(x))});
+        }
+        catch (e) {
+            this.setState({dialogError: e.message});
+        }
+
+        this.setState({
+            deleteNames: null,
+            dialogLoading: false
+        });
+    }
+
     private async onRenameDialogCloseImpl(newName : string) {
         try {
-            await this.rename(this.state.renameName, newName);
+            await this.props.appInstance.callBackend('move', {
+                from: this.resolvePath(this.state.renameName),
+                to: this.resolvePath(newName)
+            });
 
             this.setState({
                 renameName: null,
@@ -281,6 +304,12 @@ export class Files extends React.Component<FilesProps, FilesState> {
                     elements={this.state.elements}
                     selected={this.state.selected}
                     error={this.state.error}
+                />
+
+                <DeleteDialog
+                    names={this.state.deleteNames}
+                    loading={this.state.dialogLoading}
+                    onClose={deleteConfirmed => this.onDeleteDialogClose(deleteConfirmed)}
                 />
 
                 <RenameDialog

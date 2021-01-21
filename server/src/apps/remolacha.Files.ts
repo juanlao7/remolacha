@@ -9,6 +9,7 @@ import { Connection } from '../Connection';
 const readdir = promisify(fs.readdir);
 const lstat = promisify(fs.lstat);
 const stat = promisify(fs.stat);
+const remove = promisify(fs.remove);
 
 enum DirectoryElementType {
     FILE = 'f',
@@ -138,7 +139,7 @@ const app : App = {
         }
 
         // promisify(fs.move) is not compatible with passing a fs.MoveOptions parameter.
-        
+
         await new Promise((resolve, reject) => fs.move(params.from, params.to, {overwrite: true}, e => {
             if (e) {
                 reject(e);
@@ -148,6 +149,15 @@ const app : App = {
             }
         }));
 
+        connection.close();
+    },
+
+    delete: async (params : any, connection : Connection) => {
+        if (params == null || typeof params != 'object' || !Array.isArray(params.paths) || params.paths.some((x : any) => !TypeTools.isString(x))) {
+            throw new Error('Unexpected params.');
+        }
+
+        await Promise.all(params.paths.map((x : string) => remove(x)));
         connection.close();
     }
 };
