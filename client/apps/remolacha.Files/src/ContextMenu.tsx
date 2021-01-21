@@ -25,6 +25,12 @@ export class ContextMenu extends React.Component<ContextMenuProps, ContextMenuSt
 
     private onNewFileMenuItemClick() {
         this.props.onClose();
+        this.props.files.createNewFile();
+    }
+
+    private onNewDirectoryMenuItemClick() {
+        this.props.onClose();
+        this.props.files.createNewDirectory();
     }
 
     private onOpenFileMenuItemClick() {
@@ -44,6 +50,22 @@ export class ContextMenu extends React.Component<ContextMenuProps, ContextMenuSt
         this.props.onClose();
         const path = this.props.files.resolvePath(this.props.selected.keys().next().value);
         remolacha.Environment.getInstance().openApp('remolacha.Files', new Map([['cwd', path]]));
+    }
+
+    private onOpenAllSelectedMenuItemClick() {
+        this.props.onClose();
+
+        for (const name of this.props.selected.keys()) {
+            const element = this.props.files.getElementByName(name);
+            const path = this.props.files.resolvePath(this.props.selected.keys().next().value);
+
+            if (element.type == 'd') {
+                remolacha.Environment.getInstance().openApp('remolacha.Files', new Map([['cwd', path]]));
+            }
+            else {
+                // TODO: open with text editor.
+            }
+        }
     }
 
     private onDeleteMenuItemClick() {
@@ -79,7 +101,7 @@ export class ContextMenu extends React.Component<ContextMenuProps, ContextMenuSt
                 </MenuItem>}
 
                 {this.props.selected.size == 0 &&
-                <MenuItem>
+                <MenuItem onClick={() => this.onNewDirectoryMenuItemClick()}>
                     New directory
                 </MenuItem>}
 
@@ -94,7 +116,7 @@ export class ContextMenu extends React.Component<ContextMenuProps, ContextMenuSt
                 </MenuItem>}
 
                 {this.props.selected.size > 1 &&
-                <MenuItem>
+                <MenuItem onClick={() => this.onOpenAllSelectedMenuItemClick()}>
                     Open all selected
                 </MenuItem>}
 

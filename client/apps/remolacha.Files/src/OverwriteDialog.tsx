@@ -32,7 +32,7 @@ export class OverwriteDialog extends React.Component<OverwriteDialogProps, Overw
                 onClose={() => this.props.onClose(false)}
             >
                 <DialogContent>
-                    <DialogContentText>File <strong>{this.props.name || this.state.lastKnownName}</strong> already exists. Overwrite?</DialogContentText>
+                    <DialogContentText>File <strong>{this.state.lastKnownName}</strong> already exists. Overwrite?</DialogContentText>
                 </DialogContent>
 
                 <DialogActions>

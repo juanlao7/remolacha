@@ -8,6 +8,7 @@ import { RenameDialog } from './RenameDialog';
 import { OverwriteDialog } from './OverwriteDialog';
 import { ErrorDialog } from './ErrorDialog';
 import { DeleteDialog } from './DeleteDialog';
+import { NewElementDialog } from './NewElementDialog';
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
@@ -27,6 +28,7 @@ interface FilesState {
     nextPaths? : Array<string>;
     error? : any;
     dialogError? : string;
+    newElementName?: string;
     deleteNames? : Array<string>;
     renameName? : string;
     overwriteName? : string;
@@ -50,6 +52,9 @@ export class Files extends React.Component<FilesProps, FilesState> {
             previousPaths: [],
             nextPaths: [],
             error: null,
+            dialogError: null,
+            newElementName: null,
+            deleteNames: null,
             renameName: null,
             overwriteName: null,
             dialogLoading: false,
@@ -196,12 +201,41 @@ export class Files extends React.Component<FilesProps, FilesState> {
         this.setState({renameName: this.state.selected.keys().next().value});
     }
 
+    createNewFile() {
+        this.setState({newElementName: 'file'});
+    }
+
+    createNewDirectory() {
+        this.setState({newElementName: 'directory'});
+    }
+
     private onLocationInputChange(e : React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
         this.setState({locationInputValue: e.target.value});
     }
 
     private onLocationInputBlur() {
         this.setState({locationInputValue: this.state.currentPath});
+    }
+
+    private async onNewElementDialogClose(name : string) {
+        if (name == null) {
+            this.setState({newElementName: null});
+            return;
+        }
+
+        this.setState({dialogLoading: true});
+
+        try {
+            await this.props.appInstance.callBackend((this.state.newElementName == 'file') ? 'createFile' : 'createDirectory', {path: this.resolvePath(name)});
+        }
+        catch (e) {
+            this.setState({dialogError: e.message});
+        }
+
+        this.setState({
+            newElementName: null,
+            dialogLoading: false
+        });
     }
 
     private async onDeleteDialogClose(deleteConfirmed : boolean) {
@@ -304,6 +338,12 @@ export class Files extends React.Component<FilesProps, FilesState> {
                     elements={this.state.elements}
                     selected={this.state.selected}
                     error={this.state.error}
+                />
+
+                <NewElementDialog
+                    elementName={this.state.newElementName}
+                    loading={this.state.dialogLoading}
+                    onClose={name => this.onNewElementDialogClose(name)}
                 />
 
                 <DeleteDialog

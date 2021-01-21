@@ -1,42 +1,42 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogContentText, DialogActions, Button, TextField, LinearProgress } from '@material-ui/core';
 
-interface RenameDialogProps {
-    originalName : string;
+interface NewElementDialogProps {
+    elementName : string;
     loading : boolean;
-    onClose : (newName : string) => void;
+    onClose : (name : string) => void;
 }
 
-interface RenameDialogState {
-    newName? : string;
-    lastKnownOriginalName? : string;        // To avoid a weird glitch where the text instantly disappears while the dialog is closing.
+interface NewElementDialogState {
+    name? : string;
+    lastKnownElementName? : string;        // To avoid a weird glitch where the text instantly disappears while the dialog is closing.
 }
 
-export class RenameDialog extends React.Component<RenameDialogProps, RenameDialogState> {
-    constructor(props : RenameDialogProps) {
+export class NewElementDialog extends React.Component<NewElementDialogProps, NewElementDialogState> {
+    constructor(props : NewElementDialogProps) {
         super(props);
         
         this.state = {
-            newName: this.props.originalName,
-            lastKnownOriginalName: this.props.originalName
+            name: '',
+            lastKnownElementName: this.props.elementName
         };
     }
 
     private onTextFieldChange(e : React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
-        this.setState({newName: e.target.value});
+        this.setState({name: e.target.value});
     }
 
     private onTextFieldKeyPress(e : React.KeyboardEvent<HTMLDivElement>) {
         if (e.key == 'Enter') {
-            this.props.onClose(this.state.newName);
+            this.props.onClose(this.state.name);
         }
     }
 
-    componentDidUpdate(prevProps: Readonly<RenameDialogProps>) {
-        if (prevProps.originalName == null && this.props.originalName != null) {
+    componentDidUpdate(prevProps: Readonly<NewElementDialogProps>) {
+        if (prevProps.elementName == null && this.props.elementName != null) {
             this.setState({
-                newName: this.props.originalName,
-                lastKnownOriginalName: this.props.originalName
+                name: '',
+                lastKnownElementName: this.props.elementName
             });
         }
     }
@@ -44,19 +44,19 @@ export class RenameDialog extends React.Component<RenameDialogProps, RenameDialo
     render() {
         return (
             <Dialog
-                open={this.props.originalName != null}
+                open={this.props.elementName != null}
                 disableBackdropClick={this.props.loading}
                 disableEscapeKeyDown={this.props.loading}
                 onClose={() => this.props.onClose(null)}
             >
                 <DialogContent>
-                    <DialogContentText>Rename <strong>{this.state.lastKnownOriginalName}</strong>?</DialogContentText>
+                    <DialogContentText>Create {this.state.lastKnownElementName}?</DialogContentText>
 
                     <TextField
                         autoFocus
                         variant="filled"
-                        label="New name"
-                        value={this.state.newName}
+                        label="Name"
+                        value={this.state.name}
                         fullWidth
                         disabled={this.props.loading}
                         onChange={e => this.onTextFieldChange(e)}
@@ -78,9 +78,9 @@ export class RenameDialog extends React.Component<RenameDialogProps, RenameDialo
                         color="primary"
                         variant="contained"
                         disabled={this.props.loading}
-                        onClick={() => this.props.onClose(this.state.newName)}
+                        onClick={() => this.props.onClose(this.state.name)}
                     >
-                        Rename
+                        Create
                     </Button>
                 </DialogActions>
 

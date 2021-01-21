@@ -1,15 +1,9 @@
 import fs from 'fs-extra';
 import os from 'os';
 import path from 'path';
-import { promisify } from 'util';
 import { TypeTools } from 'remolacha-commons';
 import { App } from '../App';
 import { Connection } from '../Connection';
-
-const readdir = promisify(fs.readdir);
-const lstat = promisify(fs.lstat);
-const stat = promisify(fs.stat);
-const remove = promisify(fs.remove);
 
 enum DirectoryElementType {
     FILE = 'f',
@@ -38,7 +32,7 @@ const DIRECTORY_ELEMENT_TYPE_FUNCTIONS : Array<[keyof fs.Stats, DirectoryElement
 ];
 
 async function getDirectoryElements(directoryPath : string) : Promise<Array<DirectoryElement>> {
-    const names = await readdir(directoryPath) as Array<string>;
+    const names = await fs.readdir(directoryPath);
     const elements : Array<DirectoryElement> = [];
     const promises : Array<Promise<unknown>> = [];
 
@@ -48,8 +42,8 @@ async function getDirectoryElements(directoryPath : string) : Promise<Array<Dire
         promises.push(new Promise(async (resolve) => {
             try {
                 const elementPath = path.join(directoryPath, name);
-                const lstatResult = await lstat(elementPath) as fs.Stats;
-                const typeStatResult = (lstatResult.isSymbolicLink()) ? await stat(elementPath) as fs.Stats : lstatResult;
+                const lstatResult = await fs.lstat(elementPath);
+                const typeStatResult = (lstatResult.isSymbolicLink()) ? await fs.stat(elementPath) as fs.Stats : lstatResult;
                 element.type = DirectoryElementType.FILE;
 
                 for (const [func, elementType] of DIRECTORY_ELEMENT_TYPE_FUNCTIONS) {
@@ -82,6 +76,19 @@ async function readDirectoryImpl(directoryPath : string, connection : Connection
         path: directoryPath,
         elements: await getDirectoryElements(directoryPath)
     });
+}
+
+async function createElementImpl(params : any, connection : Connection, createElement : (path : string) => Promise<void>) {
+    if (params == null || typeof params != 'object' || !TypeTools.isString(params.path)) {
+        throw new Error('Unexpected params.');
+    }
+
+    if (await fs.pathExists(params.path)) {
+        throw new Error(`Path already exists: ${params.path}`);
+    }
+
+    await createElement(params.path);
+    connection.close();
 }
 
 const app : App = {
@@ -133,22 +140,20 @@ const app : App = {
         }
     },
 
+    createFile: async (params : any, connection : Connection) => {
+        await createElementImpl(params, connection, path => fs.ensureFile(path));
+    },
+
+    createDirectory: async (params : any, connection : Connection) => {
+        await createElementImpl(params, connection, path => fs.ensureDir(path))
+    },
+
     move: async (params : any, connection : Connection) => {
         if (params == null || typeof params != 'object' || !TypeTools.isString(params.from) || !TypeTools.isString(params.to)) {
             throw new Error('Unexpected params.');
         }
 
-        // promisify(fs.move) is not compatible with passing a fs.MoveOptions parameter.
-
-        await new Promise((resolve, reject) => fs.move(params.from, params.to, {overwrite: true}, e => {
-            if (e) {
-                reject(e);
-            }
-            else {
-                resolve(null);
-            }
-        }));
-
+        await fs.move(params.from, params.to, {overwrite: true});
         connection.close();
     },
 
@@ -157,7 +162,7 @@ const app : App = {
             throw new Error('Unexpected params.');
         }
 
-        await Promise.all(params.paths.map((x : string) => remove(x)));
+        await Promise.all(params.paths.map((x : string) => fs.remove(x)));
         connection.close();
     }
 };
