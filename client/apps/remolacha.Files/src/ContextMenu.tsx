@@ -46,6 +46,11 @@ export class ContextMenu extends React.Component<ContextMenuProps, ContextMenuSt
         remolacha.Environment.getInstance().openApp('remolacha.Files', new Map([['cwd', path]]));
     }
 
+    private onRenameMenuItemClick() {
+        this.props.onClose();
+        this.props.files.openRenameDialog(this.props.selected.keys().next().value);
+    }
+
     private onOpenTerminalMenuItemClick() {
         this.props.onClose();
         remolacha.Environment.getInstance().openApp('remolacha.Terminal', new Map([['cwd', this.props.files.getCurrentPath()]]));
@@ -115,7 +120,7 @@ export class ContextMenu extends React.Component<ContextMenuProps, ContextMenuSt
                 </MenuItem>}
 
                 {this.props.selected.size == 1 &&
-                <MenuItem>
+                <MenuItem onClick={() => this.onRenameMenuItemClick()}>
                     Rename
                 </MenuItem>}
 

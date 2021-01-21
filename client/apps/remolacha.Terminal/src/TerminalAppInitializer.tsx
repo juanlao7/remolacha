@@ -46,7 +46,7 @@ export class TerminalAppInitializer {
 
         const cwd : string = params.get('cwd');
 
-        const connection = appInstance.createBackendConnection('shell', {
+        const connection = appInstance.createBackendConnection('openShell', {
             columns: term.cols,
             rows: term.rows,
             cwd: (TypeTools.isString(cwd)) ? cwd : null

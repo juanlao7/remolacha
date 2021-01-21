@@ -4,6 +4,9 @@ import { TypeTools } from 'remolacha-commons';
 import { MainToolbar } from './MainToolbar';
 import { StatusBar } from './StatusBar';
 import { FileList } from './FileList';
+import { RenameDialog } from './RenameDialog';
+import { OverwriteDialog } from './OverwriteDialog';
+import { ErrorDialog } from './ErrorDialog';
 
 declare var remolacha : any;        // TODO: https://github.com/juanlao7/remolacha/issues/1
 
@@ -22,6 +25,11 @@ interface FilesState {
     previousPaths? : Array<string>;
     nextPaths? : Array<string>;
     error? : any;
+    dialogError? : string;
+    renameName? : string;
+    overwriteName? : string;
+    dialogLoading? : boolean;
+    onOverwriteDialogClose? : (overwrite : boolean) => void
 }
 
 export class Files extends React.Component<FilesProps, FilesState> {
@@ -39,8 +47,19 @@ export class Files extends React.Component<FilesProps, FilesState> {
             selected: new Map(),
             previousPaths: [],
             nextPaths: [],
-            error: null
+            error: null,
+            renameName: null,
+            overwriteName: null,
+            dialogLoading: false,
+            onOverwriteDialogClose: null
         };
+    }
+
+    private async rename(originalName : string, newName : string) {
+        await this.props.appInstance.callBackend('move', {
+            from: this.resolvePath(originalName),
+            to: this.resolvePath(newName)
+        });
     }
 
     splitPath(absolutePath : string) : [Array<string>, string] {
@@ -126,8 +145,17 @@ export class Files extends React.Component<FilesProps, FilesState> {
                 currentPathIsValid: true,
                 locationInputValue: data.path,
                 elements: data.elements,
+                selected: new Map(),
                 error: null
             };
+
+            const elementNames = new Set<string>(newState.elements.map(x => x.name));
+
+            for (const [name, size] of this.state.selected) {
+                if (elementNames.has(name)) {
+                    newState.selected.set(name, size);
+                }
+            }
 
             if (this.state.previousPaths.length == 0 || this.state.previousPaths[this.state.previousPaths.length - 1] != data.path) {
                 this.state.previousPaths.push(data.path);
@@ -165,12 +193,62 @@ export class Files extends React.Component<FilesProps, FilesState> {
         this.setState({selected: selected});
     }
 
+    openRenameDialog(elementName : string) {
+        this.setState({renameName: elementName});
+    }
+
     private onLocationInputChange(e : React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
         this.setState({locationInputValue: e.target.value});
     }
 
     private onLocationInputBlur() {
         this.setState({locationInputValue: this.state.currentPath});
+    }
+
+    private async onRenameDialogCloseImpl(newName : string) {
+        try {
+            await this.rename(this.state.renameName, newName);
+
+            this.setState({
+                renameName: null,
+                dialogLoading: false
+            });
+        }
+        catch (e) {
+            this.setState({
+                dialogError: e.message,
+                dialogLoading: false
+            });
+        }
+    }
+
+    private async onRenameDialogClose(newName : string) {
+        if (newName == null || newName == this.state.renameName) {
+            this.setState({renameName: null});
+            return;
+        }
+        
+        this.setState({dialogLoading: true});
+
+        if (this.getElementByName(newName) == null) {
+            this.onRenameDialogCloseImpl(newName);
+            return;
+        }
+
+        this.setState({
+            overwriteName: newName,
+
+            onOverwriteDialogClose: async (overwrite) => {
+                this.setState({overwriteName: null});
+
+                if (overwrite) {
+                    this.onRenameDialogCloseImpl(newName);
+                }
+                else {
+                    this.setState({dialogLoading: false});
+                }
+            }
+        });
     }
 
     componentDidMount() {
@@ -204,6 +282,16 @@ export class Files extends React.Component<FilesProps, FilesState> {
                     selected={this.state.selected}
                     error={this.state.error}
                 />
+
+                <RenameDialog
+                    originalName={this.state.renameName}
+                    loading={this.state.dialogLoading}
+                    onClose={newName => this.onRenameDialogClose(newName)}
+                />
+
+                <OverwriteDialog name={this.state.overwriteName} onClose={overwrite => this.state.onOverwriteDialogClose(overwrite)} />
+
+                <ErrorDialog error={this.state.dialogError} onClose={() => this.setState({dialogError: null})} />
             </ThemeProvider>
         );
     }

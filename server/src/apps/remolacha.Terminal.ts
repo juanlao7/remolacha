@@ -7,7 +7,7 @@ import { Connection } from '../Connection';
 const pty = require('node-pty');    // "import pty from 'node-pty';" does not work, it only imports the types, but not the library.
 
 const app : App = {
-    shell: async (params : any, connection : Connection) => {
+    openShell: async (params : any, connection : Connection) => {
         let columns = 80;
         let rows = 30;
         let cwd : string = null;
@@ -27,7 +27,6 @@ const app : App = {
         }
 
         const shell = (os.platform() == 'win32') ? 'powershell.exe' : 'bash';      // TODO: load the configured default shell.
-        console.log(cwd);
 
         const term = pty.spawn(shell, [], {
             name: 'xterm-color',

@@ -299,7 +299,7 @@ class WindowComponent extends React.Component<WindowComponentProps, WindowCompon
         this.props.window.setWindowComponent(this);
     }
 
-    componentDidUpdate(prevProps: Readonly<WindowComponentProps>, prevState: Readonly<WindowComponentState>) {
+    componentDidUpdate(prevProps : Readonly<WindowComponentProps>, prevState : Readonly<WindowComponentState>) {
         // Firing events.
 
         if (this.propertiesHaveChanged(['title'], prevState)) {

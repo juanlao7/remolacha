@@ -77,13 +77,18 @@ export class ProcessTable extends React.Component<ProcessTableProps, ProcessTabl
         });
     }
 
-    private onKillClick() {
+    private async onKillClick() {
         this.setState({killingState: KillingState.KILLING});
         const newState : ProcessTableState = {killingState: KillingState.FINISHED_KILLING};
-        const connection = this.props.appInstance.createBackendConnection('killProcesses', {pids: [...this.state.selected]});
-        connection.events.on('error', (emitter : any, error : any) => newState.error = error);
-        connection.events.on('close', () => this.setState(newState));
-        connection.open();
+
+        try {
+            await this.props.appInstance.callBackend('killProcesses', {pids: [...this.state.selected]});
+        }
+        catch (e) {
+            newState.error = e.message;
+        }
+
+        this.setState(newState);
     }
 
     componentDidMount() {

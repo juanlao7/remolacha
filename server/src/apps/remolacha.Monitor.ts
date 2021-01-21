@@ -30,19 +30,12 @@ const app : App = {
     },
 
     killProcesses: async (params : any, connection : Connection) => {
-        try {
-            if (params == null || typeof params != 'object' || !Array.isArray(params.pids) || params.pids.some((x : any) => !Number.isInteger(x))) {
-                throw new Error('Unexpected params.');
-            }
+        if (params == null || typeof params != 'object' || !Array.isArray(params.pids) || params.pids.some((x : any) => !Number.isInteger(x))) {
+            throw new Error('Unexpected params.');
+        }
 
-            await fkill(params.pids, {force: true});
-        }
-        catch (e) {
-            connection.fail(e.message);
-        }
-        finally {
-            connection.close();
-        }
+        await fkill(params.pids, {force: true});
+        connection.close();
     }
 };
 

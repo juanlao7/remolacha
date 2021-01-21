@@ -85,57 +85,70 @@ async function readDirectoryImpl(directoryPath : string, connection : Connection
 
 const app : App = {
     readDirectory: async (params : any, connection : Connection) => {
+        if (params == null || typeof params != 'object' || !('goHome' in params || TypeTools.isString(params.path))) {
+            throw new Error('Unexpected params.');
+        }
+
+        let directoryPath = ('goHome' in params) ? os.homedir() : params.path;
+
+        if (path.isAbsolute(directoryPath)) {
+            directoryPath = path.resolve(directoryPath);
+        }
+        else if (params.cwd != null) {
+            directoryPath = path.resolve(path.join(params.cwd, directoryPath));
+        }
+
         try {
-            if (params == null || typeof params != 'object' || !('goHome' in params || TypeTools.isString(params.path))) {
-                throw new Error('Unexpected params.');
-            }
-
-            let directoryPath = ('goHome' in params) ? os.homedir() : params.path;
-
-            if (path.isAbsolute(directoryPath)) {
-                directoryPath = path.resolve(directoryPath);
-            }
-            else if (params.cwd != null) {
-                directoryPath = path.resolve(path.join(params.cwd, directoryPath));
-            }
-
-            try {
-                function onWatch() {
-                    try {
-                        readDirectoryImpl(directoryPath, connection);
-                        watcher.close();
-                        startWatcher();
-                    }
-                    catch (e) {
-                        console.log(1);
-                        connection.fail(e.message);
-                        connection.close();
-                    }
+            function onWatch() {
+                try {
+                    readDirectoryImpl(directoryPath, connection);
+                    watcher.close();
+                    startWatcher();
                 }
-
-                function startWatcher() {
-                    watcher = fs.watch(directoryPath, onWatch);
+                catch (e) {
+                    console.log(1);
+                    connection.fail(e.message);
+                    connection.close();
                 }
-
-                let watcher : fs.FSWatcher;
-                startWatcher();
-                connection.events.once('close', () => watcher.close());
-
-                await readDirectoryImpl(directoryPath, connection);
             }
-            catch (e) {
-                connection.send({
-                    path: directoryPath,
-                    elements: []
-                });
 
-                throw e;
+            function startWatcher() {
+                watcher = fs.watch(directoryPath, onWatch);
             }
+
+            let watcher : fs.FSWatcher;
+            startWatcher();
+            connection.events.once('close', () => watcher.close());
+
+            await readDirectoryImpl(directoryPath, connection);
         }
         catch (e) {
-            connection.fail(e.message);
-            connection.close();
+            connection.send({
+                path: directoryPath,
+                elements: []
+            });
+
+            throw e;
         }
+    },
+
+    move: async (params : any, connection : Connection) => {
+        if (params == null || typeof params != 'object' || !TypeTools.isString(params.from) || !TypeTools.isString(params.to)) {
+            throw new Error('Unexpected params.');
+        }
+
+        // promisify(fs.move) is not compatible with passing a fs.MoveOptions parameter.
+        
+        await new Promise((resolve, reject) => fs.move(params.from, params.to, {overwrite: true}, e => {
+            if (e) {
+                reject(e);
+            }
+            else {
+                resolve(null);
+            }
+        }));
+
+        connection.close();
     }
 };
 

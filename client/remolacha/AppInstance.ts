@@ -59,6 +59,25 @@ export class AppInstance {
         return connection;
     }
 
+    callBackend(service : string, params : any) : Promise<any> {
+        return new Promise((resolve, reject) => {
+            const connection = this.createBackendConnection(service, params);
+            
+            connection.events.once('data', (emitter, data) => {
+                resolve(data);
+                connection.close();
+            });
+
+            connection.events.once('error', (emitter, error) => {
+                reject(new Error(error));
+                connection.close();
+            });
+
+            connection.events.once('close', () => resolve(null));
+            connection.open();
+        });
+    }
+
     async loadCSS(url : string) : Promise<void> {
         await Environment.getInstance().loadCSS(this, url);
     }
