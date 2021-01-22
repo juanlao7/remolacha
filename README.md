@@ -6,7 +6,7 @@ The goal of this project is to offer a graphical environment and a small set of 
 
 The advantage of this in front of VNC or remote X is that the server load is almost non-existent, as applications run on Javascript—on the client side—and only call certain microservices when necessary.
 
-![Preview](preview.png)
+[![Preview](preview.png)](https://raw.githubusercontent.com/juanlao7/remolacha/main/preview.png)
 
 ## Build \& run
 
