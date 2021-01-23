@@ -153,7 +153,7 @@ const app : App = {
             throw new Error('Unexpected params.');
         }
 
-        await fs.move(params.from, params.to, {overwrite: true});
+        await fs.move(params.from, params.to, {overwrite: (params.overwrite === true)});
         connection.close();
     },
 

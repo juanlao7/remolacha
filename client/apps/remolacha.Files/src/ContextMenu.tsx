@@ -25,12 +25,12 @@ export class ContextMenu extends React.Component<ContextMenuProps, ContextMenuSt
 
     private onNewFileMenuItemClick() {
         this.props.onClose();
-        this.props.files.createNewFile();
+        this.props.files.openNewFileDialog();
     }
 
     private onNewDirectoryMenuItemClick() {
         this.props.onClose();
-        this.props.files.createNewDirectory();
+        this.props.files.openNewDirectoryDialog();
     }
 
     private onOpenFileMenuItemClick() {

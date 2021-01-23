@@ -193,20 +193,20 @@ export class Files extends React.Component<FilesProps, FilesState> {
         this.setState({selected: selected});
     }
 
+    openNewFileDialog() {
+        this.setState({newElementName: 'file'});
+    }
+
+    openNewDirectoryDialog() {
+        this.setState({newElementName: 'directory'});
+    }
+
     openDeleteDialog() {
         this.setState({deleteNames: [...this.state.selected.keys()]});
     }
 
     openRenameDialog() {
         this.setState({renameName: this.state.selected.keys().next().value});
-    }
-
-    createNewFile() {
-        this.setState({newElementName: 'file'});
-    }
-
-    createNewDirectory() {
-        this.setState({newElementName: 'directory'});
     }
 
     private onLocationInputChange(e : React.ChangeEvent<HTMLTextAreaElement | HTMLInputElement>) {
@@ -259,11 +259,12 @@ export class Files extends React.Component<FilesProps, FilesState> {
         });
     }
 
-    private async onRenameDialogCloseImpl(newName : string) {
+    private async onRenameDialogCloseImpl(newName : string, overwrite : boolean) {
         try {
             await this.props.appInstance.callBackend('move', {
                 from: this.resolvePath(this.state.renameName),
-                to: this.resolvePath(newName)
+                to: this.resolvePath(newName),
+                overwrite: overwrite
             });
 
             this.setState({
@@ -288,7 +289,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
         this.setState({dialogLoading: true});
 
         if (this.getElementByName(newName) == null) {
-            this.onRenameDialogCloseImpl(newName);
+            this.onRenameDialogCloseImpl(newName, false);
             return;
         }
 
@@ -299,7 +300,7 @@ export class Files extends React.Component<FilesProps, FilesState> {
                 this.setState({overwriteName: null});
 
                 if (overwrite) {
-                    this.onRenameDialogCloseImpl(newName);
+                    this.onRenameDialogCloseImpl(newName, true);
                 }
                 else {
                     this.setState({dialogLoading: false});
