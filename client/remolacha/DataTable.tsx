@@ -164,8 +164,10 @@ export class DataTable extends React.Component<DataTableProps, DataTableState> {
             this.lastMouseDownRowIndex = -1;
             this.props.onRowDoubleMouseDown(rowIndex, event);
         }
+        else {
+            this.lastMouseDownRowIndex = rowIndex;
+        }
 
-        this.lastMouseDownRowIndex = rowIndex;
         this.lastMouseDownTimestamp = now;
         this.lastMouseDownMouseX = event.clientX;
         this.lastMouseDownMouseY = event.clientY;
