@@ -26,6 +26,8 @@ export class ErrorDialog extends React.Component<ErrorDialogProps, ErrorDialogSt
         return (
             <Dialog
                 open={this.props.error != null}
+                disableBackdropClick
+                disableEscapeKeyDown
                 onClose={() => this.props.onClose()}
             >
                 <DialogTitle>Oops!</DialogTitle>
